@@ -1,6 +1,6 @@
+using System.Net;
 using BlogNetCore.Data;
 using BlogNetCore.Models;
-using BlogNetCore.Common.Exceptions;
 using BlogNetCore.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -30,8 +30,20 @@ try
         {
             options.Cookie.Name = "sid";
             options.Cookie.HttpOnly = builder.Environment.IsProduction();
-            options.Events.OnRedirectToLogin = _ => throw new AuthenticationException();
-            options.Events.OnRedirectToAccessDenied = _ => throw new AuthorizationException();
+            options.Events.OnRedirectToLogin = async (context) =>
+            {
+                await Results.Problem(
+                        title: "Unauthorized request.",
+                        statusCode: (int)HttpStatusCode.Unauthorized)
+                    .ExecuteAsync(context.HttpContext);
+            };
+            options.Events.OnRedirectToAccessDenied = async (context) =>
+            {
+                await Results.Problem(
+                        title: "Access denied.",
+                        statusCode: (int)HttpStatusCode.Forbidden)
+                    .ExecuteAsync(context.HttpContext);
+            };
         });
     builder.Services.AddAuthorization((options) =>
     {
@@ -45,6 +57,8 @@ try
     builder.Services.AddScoped<IUserService, UserService>();
 
     var app = builder.Build();
+    
+    app.UseExceptionHandler("/error");
 
     if (app.Environment.IsDevelopment())
     {

@@ -4,6 +4,7 @@ using BlogNetCore.Common.DTOs;
 using BlogNetCore.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BlogNetCore.Controllers;
@@ -21,6 +22,7 @@ public class AccountController : ControllerBase
         _userService = userService;
     }
 
+    [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] UserCredentialsDto request)
     {
@@ -62,6 +64,7 @@ public class AccountController : ControllerBase
         return Ok();
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<IActionResult> Register([FromBody] UserRegistrationDto request)
     {
