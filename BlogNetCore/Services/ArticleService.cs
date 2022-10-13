@@ -92,4 +92,14 @@ public class ArticleService : IArticleService
         await _db.SaveChangesAsync();
         _logger.LogInformation("Draft article {ArticleId} was deleted", article.Id);
     }
+
+    public async Task UpdateArticle(Article article, string title, string content, ICollection<Tag> tags)
+    {
+        article.Title = title;
+        article.Slug = GenerateUtils.Slugify(title, (await GenerateUtils.GenerateShortId()));
+        article.Content = content;
+        article.Tags = tags;
+        article.LastModifiedAt = DateTime.UtcNow;
+        await _db.SaveChangesAsync();
+    }
 }

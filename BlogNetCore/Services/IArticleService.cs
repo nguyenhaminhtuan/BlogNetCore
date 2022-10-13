@@ -11,4 +11,5 @@ public interface IArticleService
     Task PublishArticle(Article article);
     Task ArchiveArticle(Article article);
     Task DeleteArticle(Article article);
+    Task UpdateArticle(Article article, string title, string content, ICollection<Tag> tags);
 }

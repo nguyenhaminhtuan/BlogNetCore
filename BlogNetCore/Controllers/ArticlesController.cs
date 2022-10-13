@@ -50,7 +50,7 @@ public class ArticlesController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpGet("feed")]
-    public async Task<ActionResult<IEnumerable<ArticleDto>>> GetFeed()
+    public async Task<IActionResult> GetFeed()
     {
         var articles = await _articleService.GetFeedArticles();
         return Ok(_mapper.Map<IEnumerable<ArticleDto>>(articles));
@@ -69,6 +69,31 @@ public class ArticlesController : ApiControllerBase
                 return Forbid();
             
             return Ok(_mapper.Map<ArticleDto>(article));
+        });
+    }
+
+    [HttpPut("{id:int}")]
+    public async Task<IActionResult> Update([FromBody] UpdateArticleDto request, int id)
+    {
+        var tagIdsSet = request.TagIds.ToHashSet();
+        if (tagIdsSet.Count != request.TagIds.Count)
+            return ValidationProblem("Contains duplicate Tag ID.");
+
+        var tags = tagIdsSet.Count > 0 ? (await _tagService.GetTagsById(tagIdsSet)).ToList()
+            : new List<Tag>();
+        if (tagIdsSet.Count > 0 && tagIdsSet.Count != tags.Count)
+            return ValidationProblem("Some tags was invalid or not available.");
+        
+        var article = await _articleService.GetArticleById(id);
+        return await NotFoundOrResult(article, async () =>
+        {
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, article, Operations.Update);
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+            
+            await _articleService.UpdateArticle(article!, request.Title, request.Content, tags);
+            return NoContent();
         });
     }
 
