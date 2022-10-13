@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using BlogNetCore.Authorization;
 using BlogNetCore.Common.DTOs;
 using BlogNetCore.Extensions;
 using BlogNetCore.Models;
@@ -10,18 +11,21 @@ namespace BlogNetCore.Controllers;
 
 public class ArticlesController : ApiControllerBase
 {
+    private readonly IMapper _mapper;
+    private readonly IAuthorizationService _authorizationService;
     private readonly IArticleService _articleService;
     private readonly ITagService _tagService;
-    private readonly IMapper _mapper;
 
     public ArticlesController(
+        IMapper mapper,
+        IAuthorizationService authorizationService,
         IArticleService articleService,
-        ITagService tagService,
-        IMapper mapper)
+        ITagService tagService)
     {
+        _mapper = mapper;
+        _authorizationService = authorizationService;
         _articleService = articleService;
         _tagService = tagService;
-        _mapper = mapper;
     }
 
     [HttpPost]
@@ -49,8 +53,7 @@ public class ArticlesController : ApiControllerBase
     public async Task<ActionResult<IEnumerable<ArticleDto>>> GetFeed()
     {
         var articles = await _articleService.GetFeedArticles();
-        var dto = _mapper.Map<IEnumerable<ArticleDto>>(articles);
-        return Ok(dto);
+        return Ok(_mapper.Map<IEnumerable<ArticleDto>>(articles));
     }
 
     [AllowAnonymous]
@@ -58,7 +61,15 @@ public class ArticlesController : ApiControllerBase
     public async Task<IActionResult> GetBySlug(string slug)
     {
         var article = await _articleService.GetArticleBySlug(slug);
-        return NotFoundOrResult(article, Ok(article));
+        return await NotFoundOrResult(article, async () =>
+        {
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, article, Operations.Read);
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+            
+            return Ok(_mapper.Map<ArticleDto>(article));
+        });
     }
 
     [HttpDelete("{id:int}")]
@@ -67,6 +78,11 @@ public class ArticlesController : ApiControllerBase
         var article = await _articleService.GetArticleById(id);
         return await NotFoundOrResult(article, async () =>
         {
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, article, Operations.Delete);
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+            
             await _articleService.DeleteArticle(article!);
             return NoContent();
         });
@@ -78,6 +94,11 @@ public class ArticlesController : ApiControllerBase
         var article = await _articleService.GetArticleById(id);
         return await NotFoundOrResult(article, async () =>
         {
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, article, Operations.Update);
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+            
             await _articleService.PublishArticle(article!);
             return NoContent();
         });
@@ -89,6 +110,11 @@ public class ArticlesController : ApiControllerBase
         var article = await _articleService.GetArticleById(id);
         return await NotFoundOrResult(article, async () =>
         {
+            var authorizationResult = await _authorizationService
+                .AuthorizeAsync(User, article, Operations.Update);
+            if (!authorizationResult.Succeeded)
+                return Forbid();
+            
             await _articleService.ArchiveArticle(article!);
             return NoContent();
         });

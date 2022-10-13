@@ -37,6 +37,8 @@ public class ArticleService : IArticleService
     public async Task<Article?> GetArticleBySlug(string slug)
     {
         return await _db.Articles
+            .Include(a => a.Author)
+            .Include(a => a.Tags)
             .FirstOrDefaultAsync(a => string.Equals(a.Slug, slug));
     }
 
@@ -53,7 +55,7 @@ public class ArticleService : IArticleService
         };
         await _db.AddAsync(article);
         await _db.SaveChangesAsync();
-        _logger.LogInformation("Article {ArticleSlug} was created in draft", article.Slug);
+        _logger.LogInformation("Article {ArticleId} was created in draft", article.Id);
     }
 
     private async Task ChangeArticleStatus(Article article, ArticleStatus status)
@@ -64,8 +66,8 @@ public class ArticleService : IArticleService
 
         await _db.SaveChangesAsync();
         _logger.LogInformation(
-            "Article {ArticleSlug} changed status to {ArticleStatus}",
-            article.Slug, Enum.GetName(typeof(ArticleStatus), article.Status)?.ToLower());
+            "Article {ArticleId} changed status to {ArticleStatus}",
+            article.Id, Enum.GetName(typeof(ArticleStatus), article.Status)?.ToLower());
     }
 
     public Task PublishArticle(Article article)
@@ -88,5 +90,6 @@ public class ArticleService : IArticleService
 
         _db.Remove(article);
         await _db.SaveChangesAsync();
+        _logger.LogInformation("Draft article {ArticleId} was deleted", article.Id);
     }
 }

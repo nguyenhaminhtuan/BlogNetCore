@@ -1,4 +1,5 @@
 using System.Net;
+using BlogNetCore.Authorization;
 using BlogNetCore.Config;
 using BlogNetCore.Data;
 using BlogNetCore.Models;
@@ -59,6 +60,7 @@ try
         options.DefaultPolicy = requireAuthenticatedPolicy;
         options.FallbackPolicy = requireAuthenticatedPolicy;
     });
+    builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
     builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
     
