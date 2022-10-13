@@ -1,4 +1,5 @@
 using System.Net;
+using BlogNetCore.Config;
 using BlogNetCore.Data;
 using BlogNetCore.Models;
 using BlogNetCore.Services;
@@ -18,6 +19,11 @@ try
 {
     builder.Host.UseSerilog();
 
+    builder.Services.AddRouting(options =>
+    {
+        options.LowercaseUrls = true;
+        options.LowercaseQueryStrings = true;
+    });
     builder.Services.AddControllers();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
@@ -54,7 +60,12 @@ try
         options.FallbackPolicy = requireAuthenticatedPolicy;
     });
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
+    builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+    
+    // Services
     builder.Services.AddScoped<IUserService, UserService>();
+    builder.Services.AddScoped<ITagService, TagService>();
+    builder.Services.AddScoped<IArticleService, ArticleService>();
 
     var app = builder.Build();
     

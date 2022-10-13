@@ -8,6 +8,5 @@ public interface IUserService
 {
     bool IsValidCredentials(User user, string password);
     Task<User?> GetUserByUsername(string username);
-    Task<bool> ExistsByUsername(string username);
     Task<OneOf<User, EmailAlreadyExists>> CreateUser(string username, string password, string displayName);
 }

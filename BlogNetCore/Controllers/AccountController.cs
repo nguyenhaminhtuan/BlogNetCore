@@ -9,9 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BlogNetCore.Controllers;
 
-[ApiController]
-[Route("api/account")]
-public class AccountController : ControllerBase
+public class AccountController : ApiControllerBase
 {
     private readonly ILogger<AccountController> _logger;
     private readonly IUserService _userService;
@@ -27,16 +25,12 @@ public class AccountController : ControllerBase
     public async Task<IActionResult> Login([FromBody] UserCredentialsDto request)
     {
         var user = await _userService.GetUserByUsername(request.Username);
+        const string badCredTitle = "Bad credentials";
         if (user is null)
-            return Problem(
-                title: "User not found.",
-                detail: $"Can't find user with username {request.Username}",
-                statusCode: (int)HttpStatusCode.NotFound);
+            return ValidationProblem(title: badCredTitle);
 
         if (!_userService.IsValidCredentials(user, request.Password))
-            return Problem(
-                title: "Bad credentials",
-                statusCode: (int)HttpStatusCode.BadRequest);
+            return ValidationProblem(title: badCredTitle);
 
         var claims = new List<Claim>
         {
@@ -57,9 +51,7 @@ public class AccountController : ControllerBase
                 IssuedUtc = DateTime.UtcNow,
                 ExpiresUtc = DateTime.UtcNow.AddMinutes(20)
             });
-        _logger.LogInformation(
-            "User {Username} logged in at {LoginTime}",
-            user.Username, DateTimeOffset.UtcNow.ToString("u"));
+        _logger.LogInformation("User {Username} logged in", user.Username);
 
         return Ok();
     }
@@ -85,9 +77,7 @@ public class AccountController : ControllerBase
     {
         var usernameClaim = HttpContext.User.FindFirst((claims) => claims.Type == ClaimTypes.Email);
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        _logger.LogInformation(
-            "User {Username} logged out at {LogoutTime}",
-            usernameClaim?.Value, DateTime.UtcNow.ToString("u"));
+        _logger.LogInformation("User {Username} logged out", usernameClaim?.Value);
         return Ok();
     }
 }

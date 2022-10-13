@@ -35,7 +35,7 @@ public class UserService : IUserService
             .FirstOrDefaultAsync(u => string.Equals(u.Username, username));
     }
 
-    public async Task<bool> ExistsByUsername(string username)
+    private async Task<bool> ExistsByUsername(string username)
     {
         return (await GetUserByUsername(username)) is not null;
     }
@@ -48,7 +48,8 @@ public class UserService : IUserService
         var user = new User
         {
             Username = username,
-            DisplayName = displayName
+            DisplayName = displayName,
+            Status = UserStatus.Verifying
         };
         user.Password = _passwordHasher.HashPassword(user, password);
 
