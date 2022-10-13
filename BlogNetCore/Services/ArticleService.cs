@@ -101,5 +101,6 @@ public class ArticleService : IArticleService
         article.Tags = tags;
         article.LastModifiedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
+        _logger.LogInformation("Article {ArticleId} updated", article.Id);
     }
 }

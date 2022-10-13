@@ -1,4 +1,3 @@
-using System.Net;
 using BlogNetCore.Authorization;
 using BlogNetCore.Config;
 using BlogNetCore.Data;
@@ -37,20 +36,7 @@ try
         {
             options.Cookie.Name = "sid";
             options.Cookie.HttpOnly = builder.Environment.IsProduction();
-            options.Events.OnRedirectToLogin = async (context) =>
-            {
-                await Results.Problem(
-                        title: "Unauthorized request.",
-                        statusCode: (int)HttpStatusCode.Unauthorized)
-                    .ExecuteAsync(context.HttpContext);
-            };
-            options.Events.OnRedirectToAccessDenied = async (context) =>
-            {
-                await Results.Problem(
-                        title: "Access denied.",
-                        statusCode: (int)HttpStatusCode.Forbidden)
-                    .ExecuteAsync(context.HttpContext);
-            };
+            options.EventsType = typeof(CustomCookieAuthenticationEvents);
         });
     builder.Services.AddAuthorization((options) =>
     {
@@ -64,7 +50,6 @@ try
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
     builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
     
-    // Services
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IArticleService, ArticleService>();
