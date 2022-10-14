@@ -11,5 +11,9 @@ public class AutoMapperProfile : Profile
         CreateMap<Article, ArticleDto>();
         CreateMap<User, AuthorDto>();
         CreateMap<Tag, TagDto>();
+        CreateMap<User, ProfileDto>()
+            .ForMember(dest => dest.IsVerified,
+                opt => opt
+                    .MapFrom(src => src.Status != UserStatus.Verifying));
     }
 }

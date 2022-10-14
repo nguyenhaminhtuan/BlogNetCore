@@ -32,6 +32,7 @@ public class UserService : IUserService
     public async Task<User?> GetUserByUsername(string username)
     {
         return await _db.Users
+            .Include(u => u.Articles)
             .FirstOrDefaultAsync(u => string.Equals(u.Username, username));
     }
 

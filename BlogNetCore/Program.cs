@@ -46,9 +46,11 @@ try
         options.DefaultPolicy = requireAuthenticatedPolicy;
         options.FallbackPolicy = requireAuthenticatedPolicy;
     });
+    builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
+    
+    builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
     builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
-    builder.Services.AddAutoMapper(typeof(AutoMapperProfile).Assembly);
     
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<ITagService, TagService>();
