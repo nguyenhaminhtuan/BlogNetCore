@@ -1,6 +1,8 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BlogNetCore", "BlogNetCore\BlogNetCore.csproj", "{53EAF56D-5ADE-4D8B-B2FC-9D28B5C434ED}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{699DC952-EF8C-4AC9-84FC-447B00549066}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Api", "src\Api\Api.csproj", "{2808A0E6-3988-4240-BE19-E82B09A63C60}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -8,9 +10,12 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{53EAF56D-5ADE-4D8B-B2FC-9D28B5C434ED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53EAF56D-5ADE-4D8B-B2FC-9D28B5C434ED}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53EAF56D-5ADE-4D8B-B2FC-9D28B5C434ED}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53EAF56D-5ADE-4D8B-B2FC-9D28B5C434ED}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2808A0E6-3988-4240-BE19-E82B09A63C60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2808A0E6-3988-4240-BE19-E82B09A63C60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2808A0E6-3988-4240-BE19-E82B09A63C60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2808A0E6-3988-4240-BE19-E82B09A63C60}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2808A0E6-3988-4240-BE19-E82B09A63C60} = {699DC952-EF8C-4AC9-84FC-447B00549066}
 	EndGlobalSection
 EndGlobal

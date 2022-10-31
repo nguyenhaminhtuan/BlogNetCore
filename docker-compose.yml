@@ -1,0 +1,23 @@
+﻿version: "3.8"
+services:
+  db:
+    build: ./db
+    container_name: "db"
+    environment:
+      SA_PASSWORD: "Password!123sql"
+      ACCEPT_EULA: "Y"
+    ports:
+      - "1433:1433"
+    volumes:
+      - blognetcore_db:/var/opt/mssql/data
+  migrator:
+    image: flyway/flyway:9.6.0-alpine
+    container_name: "migrator"
+    command: migrate
+    volumes:
+      - ./db/migrations:/flyway/sql
+      - ./db/flyway.conf:/flyway/conf/flyway.conf
+    depends_on:
+      - db
+volumes:
+  blognetcore_db:
