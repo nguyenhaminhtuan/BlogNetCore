@@ -1,7 +1,10 @@
+using System.Reflection;
 using Api.Authorization;
 using Api.Data;
 using Api.Models;
 using Api.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -44,6 +47,7 @@ try
         });
     builder.Services.AddAuthorization();
     builder.Services.AddAutoMapper(typeof(Program));
+    builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
     
     builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();

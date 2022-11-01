@@ -1,6 +1,9 @@
 ﻿using System.Security.Claims;
 using Api.Controllers.DTOs;
+using Api.Extensions;
 using Api.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
@@ -13,7 +16,9 @@ public class AccountController : ApiControllerBase
     private readonly ILogger<AccountController> _logger;
     private readonly IUserService _userService;
     
-    public AccountController(ILogger<AccountController> logger, IUserService userService)
+    public AccountController(
+        ILogger<AccountController> logger,
+        IUserService userService)
     {
         _logger = logger;
         _userService = userService;
@@ -21,10 +26,17 @@ public class AccountController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login(UserCredentialsDto request)
+    public async Task<IActionResult> Login(
+        UserCredentialsDto dto,
+        [FromServices] IValidator<UserCredentialsDto> validator)
     {
-        var user = await _userService.GetUserByUsernameAsync(request.Username);
-        if (user is null || !_userService.IsValidCredentials(user, request.Password))
+        var validationResult = await validator.ValidateAsync(dto);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+
+        var user = await _userService.GetUserByUsernameAsync(dto.Username);
+        if (user is null || !_userService.IsValidCredentials(user, dto.Password))
             return BadRequest(
                 title: "Bad credentials.",
                 detail: "Invalid username or password.");
@@ -55,18 +67,25 @@ public class AccountController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpPost("register")]
-    public async Task<IActionResult> Register(UserCredentialsDto request)
+    public async Task<IActionResult> Register(
+        UserCredentialsDto dto,
+        [FromServices] IValidator<UserCredentialsDto> validator)
     {
-        await _userService.RegisterUserAsync(request.Username, request.Password);
+        var validationResult = await validator.ValidateAsync(dto);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
+        await _userService.RegisterUserAsync(dto.Username, dto.Password);
         return Ok();
     }
 
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
-        var usernameClaim = HttpContext.User.FindFirst(c => c.Type == ClaimTypes.Name);
+        var userId = User.GetUserId();
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-        _logger.LogInformation("User {Username} logged out", usernameClaim?.Value);
+        _logger.LogInformation("User {UserId} logged out", userId);
         return Ok();
     }
 
