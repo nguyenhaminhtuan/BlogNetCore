@@ -9,7 +9,7 @@ public class CreateArticleValidator : AbstractValidator<CreateArticleDto>
     {
         Transform(x => x.Title, v => v?.Trim())
             .NotEmpty()
-            .MaximumLength(150);
+            .MaximumLength(200);
         RuleFor(x => x.Content)
             .NotEmpty();
     }

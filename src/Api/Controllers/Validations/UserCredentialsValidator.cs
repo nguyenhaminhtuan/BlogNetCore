@@ -12,6 +12,6 @@ public class UserCredentialsValidator  : AbstractValidator<UserCredentialsDto>
             .EmailAddress();
         Transform(x => x.Password, v => v?.Trim())
             .NotEmpty()
-            .Length(6, 150);
+            .Length(6, 100);
     }
 }

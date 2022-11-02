@@ -9,10 +9,10 @@ public class CreateProfileValidator : AbstractValidator<CreateProfileDto>
     {
         Transform(x => x.ProfileName, v => v?.Trim())
             .NotEmpty()
-            .Length(5, 50)
+            .Length(3, 30)
             .Matches("[^A-Za-z0-9_.]");
         Transform(x => x.DisplayName, v => v?.Trim())
             .NotEmpty()
-            .MaximumLength(100);
+            .MaximumLength(50);
     }
 }
