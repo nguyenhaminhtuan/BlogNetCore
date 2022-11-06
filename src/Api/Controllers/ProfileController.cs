@@ -1,4 +1,5 @@
-﻿using Api.Controllers.DTOs;
+﻿using Api.Auth;
+using Api.Controllers.DTOs;
 using AutoMapper;
 using Api.Extensions;
 using Api.Services;
@@ -7,20 +8,26 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-public class ProfilesController : ApiControllerBase
+[Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
+[Authorize(Policy = AuthorizationPolicies.VerifiedUserOnly)]
+public class ProfileController : ApiControllerBase
 {
     private readonly IMapper _mapper;
-    private readonly IAuthorizationService _authorizationService;
     private readonly IUserService _userService;
 
-    public ProfilesController(
+    public ProfileController(
         IMapper mapper,
-        IAuthorizationService authorizationService,
         IUserService userService)
     {
         _mapper = mapper;
-        _authorizationService = authorizationService;
         _userService = userService;
+    }
+    
+    [HttpGet]
+    public async Task<IActionResult> GetCurrentUserProfile()
+    {
+        await Task.CompletedTask;
+        return Ok();
     }
 
     [AllowAnonymous]

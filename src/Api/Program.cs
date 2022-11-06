@@ -1,10 +1,9 @@
 using System.Reflection;
-using Api.Authorization;
+using Api.Auth;
 using Api.Data;
 using Api.Models;
 using Api.Services;
 using FluentValidation;
-using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -44,17 +43,27 @@ try
             options.Cookie.HttpOnly = builder.Environment.IsProduction();
             options.LoginPath = "/api/account/unauthorized";
             options.AccessDeniedPath = "/api/account/forbidden";
+            options.EventsType = typeof(CustomCookieAuthenticationEvents);
         });
-    builder.Services.AddAuthorization();
+    builder.Services.AddAuthorization(options =>
+    {
+        options.AddPolicy(AuthorizationPolicies.ActiveUserOnly, policy =>
+            policy.RequireClaim(CookieClaimTypes.IsDisabled, bool.FalseString));
+        options.AddPolicy(AuthorizationPolicies.VerifiedUserOnly, policy =>
+            policy.RequireClaim(CookieClaimTypes.EmailVerified, bool.TrueString));
+    });
     builder.Services.AddAutoMapper(typeof(Program));
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
     
-    builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
-    
+    builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
+    builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
+    builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
+
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IArticleService, ArticleService>();
+    builder.Services.AddScoped<IEmailService, FakeEmailService>();
 
     var app = builder.Build();
     

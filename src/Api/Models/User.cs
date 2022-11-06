@@ -7,6 +7,7 @@ public class User
     public string Password { get; set; }
     public string ProfileName { get; set; }
     public string DisplayName { get; set; }
+    public bool EmailVerified { get; set; }
     public UserStatus Status { get; set; }
     public UserRole Role { get; set; } = UserRole.User;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
@@ -16,10 +17,8 @@ public class User
 
 public enum UserStatus : byte
 {
-    Verifying = 0,
-    Verified = 2,
-    Active = 3,
-    Disabled = 4
+    Active = 0,
+    Disabled = 1
 }
 
 public enum UserRole : byte

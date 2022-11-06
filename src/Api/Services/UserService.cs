@@ -1,4 +1,5 @@
-﻿using Api.Data;
+﻿using System.Security.Cryptography;
+using Api.Data;
 using Api.Exceptions;
 using Api.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -13,12 +14,14 @@ public class UserService : IUserService
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly ApplicationDbContext _db;
     private readonly ITimeLimitedDataProtector _verifyProtector;
+    private readonly IEmailService _emailService;
 
     public UserService(
         ILogger<UserService> logger,
         IPasswordHasher<User> passwordHasher,
         ApplicationDbContext db,
-        IDataProtectionProvider dataProtectionProvider)
+        IDataProtectionProvider dataProtectionProvider,
+        IEmailService emailService)
     {
         _logger = logger;
         _passwordHasher = passwordHasher;
@@ -26,6 +29,7 @@ public class UserService : IUserService
         _verifyProtector = dataProtectionProvider
             .CreateProtector("VerifyEmail")
             .ToTimeLimitedDataProtector();
+        _emailService = emailService;
     }
 
     public bool IsValidCredentials(User user, string password)
@@ -45,32 +49,37 @@ public class UserService : IUserService
         return _db.Users
             .FirstOrDefaultAsync(u => string.Equals(u.Username, username));
     }
+    
+    private async Task<bool> ExistsByUsername(string username)
+    {
+        return (await GetUserByUsernameAsync(username)) is not null;
+    }
 
     public Task<User?> GetUserProfileAsync(string profileName)
     {
         return _db.Users
             .Include(u => u.Articles)
             .Where(u => string.Equals(u.ProfileName, profileName))
-            .Where(u => u.Status != UserStatus.Verifying)
             .FirstOrDefaultAsync();
     }
 
     public async Task RegisterUserAsync(string username, string password)
     {
         if (await ExistsByUsername(username))
-            throw new ConflictException("Username given already exists.");
+            throw new ConflictException("Username given already exists");
 
-        var guid = new Guid();
+        var guid = Guid.NewGuid().ToString();
         var user = new User
         {
             Username = username,
-            ProfileName = $"user-{guid}",
-            DisplayName = $"User {guid}",
-            Status = UserStatus.Verifying
+            ProfileName = $"user_{guid.Replace("-", "_")}",
+            DisplayName = $"User {guid.Replace("-", " ")}",
+            Status = UserStatus.Active
         };
         user.Password = _passwordHasher.HashPassword(user, password);
         await _db.AddAsync(user);
         await _db.SaveChangesAsync();
+        await SendVerifyEmail(user.Username, user.Id);
         _logger.LogInformation("User {Username} registered", user.Username);
     }
 
@@ -79,7 +88,7 @@ public class UserService : IUserService
         var existedUser = await _db.Users
             .FirstOrDefaultAsync(u => string.Equals(u.ProfileName, profileName));
         if (existedUser is not null)
-            throw new ConflictException("Profile name given already exists.");
+            throw new ConflictException("Profile name given already exists");
 
         user.ProfileName = profileName;
         user.DisplayName = displayName;
@@ -88,13 +97,38 @@ public class UserService : IUserService
             user.Username, user.ProfileName);
     }
 
-    public string CreateVerifyHash(User user)
+    public async Task SendVerifyEmail(string to, int userId)
     {
-        return _verifyProtector.Protect(user.Id.ToString(), TimeSpan.FromMinutes(10));
+        var content = _verifyProtector.Protect(userId.ToString(), TimeSpan.FromMinutes(10));
+        await _emailService.Send("no-reply@blognetcore.com", to, "[BlogNetCore] Verify email", content);
+        _logger.LogInformation("Verify email was sent to {Email}", to);
     }
 
-    private async Task<bool> ExistsByUsername(string username)
+    public async Task<bool> VerifyUserEmail(string code)
     {
-        return (await GetUserByUsernameAsync(username)) is not null;
+        try
+        {
+            var userIdString = _verifyProtector.Unprotect(code);
+            if (!int.TryParse(userIdString, out var userId))
+                return false;
+            
+            var user = await GetUserByIdAsync(userId);
+            if (user is null)
+                return false;
+
+            if (user.EmailVerified)
+                return true;
+            
+            user.EmailVerified = true;
+            user.Status = UserStatus.Active;
+            user.LastChanged = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+            _logger.LogInformation("User {UserId} verified at {VerifyTime}", userId, DateTime.UtcNow);
+            return true;
+        }
+        catch (CryptographicException)
+        {
+            return false;
+        }
     }
 }

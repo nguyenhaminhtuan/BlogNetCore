@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization.Infrastructure;
 
-namespace Api.Authorization;
+namespace Api.Auth;
 
 public static class ArticleOperations
 {

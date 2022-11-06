@@ -10,9 +10,6 @@ public class MapperProfile : Profile
         CreateMap<Tag, TagDto>();
         CreateMap<Article, ArticleDto>();
         CreateMap<User, AuthorDto>();
-        CreateMap<User, ProfileDto>()
-            .ForMember(dest => dest.IsVerified,
-                opt => opt
-                    .MapFrom(src => src.Status != UserStatus.Verifying));
+        CreateMap<User, ProfileDto>();
     }
 }

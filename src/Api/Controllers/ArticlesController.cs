@@ -1,5 +1,5 @@
-﻿using AutoMapper;
-using Api.Authorization;
+﻿using Api.Auth;
+using AutoMapper;
 using Api.Controllers.DTOs;
 using Api.Extensions;
 using Api.Services;
@@ -8,6 +8,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
+[Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
+[Authorize(Policy = AuthorizationPolicies.VerifiedUserOnly)]
 public class ArticlesController : ApiControllerBase
 {
     private readonly IMapper _mapper;
@@ -35,12 +37,12 @@ public class ArticlesController : ApiControllerBase
     {
         var tags = (await _tagService.GetTagsById(request.TagIds)).ToHashSet();
         if (tags.Count != request.TagIds.Count)
-            return BadRequest("Some tags was invalid or not available");
+            return NotFound("One or more tags were not found");
      
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, null, ArticleOperations.Create);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for create article");
         
         var author = await _userService.GetUserByIdAsync(User.GetUserId());
         var article = await _articleService.CreateArticleAsync(
@@ -67,12 +69,12 @@ public class ArticlesController : ApiControllerBase
     {
         var article = await _articleService.GetArticleBySlugAsync(slug);
         if (article is null)
-            return NotFound();
+            return NotFound("Article not found");
         
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, article, ArticleOperations.Read);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for read this article");
         
         return Ok(_mapper.Map<ArticleDto>(article));
     }
@@ -82,16 +84,16 @@ public class ArticlesController : ApiControllerBase
     {
         var tags = (await _tagService.GetTagsById(request.TagIds)).ToHashSet();
         if (tags.Count != request.TagIds.Count)
-            return BadRequest("Some tags was invalid or not available");
+            return NotFound("One or more tags were not found");
         
         var article = await _articleService.GetArticleByIdAsync(id);
         if (article is null)
-            return NotFound();
+            return NotFound("Article not found");
         
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, article, ArticleOperations.Update);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for create article");
         
         await _articleService.UpdateArticleAsync(article, request.Title, request.Content, tags);
         return NoContent();
@@ -102,12 +104,12 @@ public class ArticlesController : ApiControllerBase
     {
         var article = await _articleService.GetArticleByIdAsync(id);
         if (article is null)
-            return NotFound();
+            return NotFound("Article not found");
         
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, article, ArticleOperations.Delete);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for delete this article");
         
         await _articleService.DeleteArticleAsync(article);
         return NoContent();
@@ -118,12 +120,12 @@ public class ArticlesController : ApiControllerBase
     {
         var article = await _articleService.GetArticleByIdAsync(id);
         if (article is null)
-            return NotFound();
+            return NotFound("Article not found");
         
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, article, ArticleOperations.Publish);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for update this article");
         
         await _articleService.PublishArticleAsync(article);
         return NoContent();
@@ -133,13 +135,13 @@ public class ArticlesController : ApiControllerBase
     public async Task<IActionResult> Archive(int id)
     {
         var article = await _articleService.GetArticleByIdAsync(id);
-        if (article is null)
-            return NotFound();
+       if (article is null)
+             return NotFound("Article not found"); 
         
         var authorizationResult = await _authorizationService
             .AuthorizeAsync(User, article, ArticleOperations.Archive);
         if (!authorizationResult.Succeeded)
-            return Forbid();
+            return Forbid("You do not have permission for archive this article");
         
         await _articleService.ArchiveArticleAsync(article);
         return NoContent();

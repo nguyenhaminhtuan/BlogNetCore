@@ -10,4 +10,6 @@ public interface IUserService
     public Task<User?> GetUserProfileAsync(string profileName);
     public Task RegisterUserAsync(string username, string password);
     public Task CreateUserProfileAsync(User user, string profileName, string displayName);
+    public Task SendVerifyEmail(string to, int userId);
+    public Task<bool> VerifyUserEmail(string code);
 }

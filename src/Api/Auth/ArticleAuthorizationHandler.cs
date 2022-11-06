@@ -4,7 +4,7 @@ using Api.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Authorization.Infrastructure;
 
-namespace Api.Authorization;
+namespace Api.Auth;
 
 public class ArticleAuthorizationHandler :
     AuthorizationHandler<OperationAuthorizationRequirement, Article>

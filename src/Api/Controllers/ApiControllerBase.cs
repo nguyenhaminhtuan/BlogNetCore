@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 
@@ -6,7 +6,6 @@ namespace Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize]
 [Produces("application/json" , "application/problem+json")]
 [Consumes("application/json")]
 public abstract class ApiControllerBase : ControllerBase
@@ -30,5 +29,30 @@ public abstract class ApiControllerBase : ControllerBase
 
         var problem = ProblemDetailsFactory.CreateValidationProblemDetails(HttpContext, modelState);
         return new BadRequestObjectResult(problem);
+    }
+
+    protected IActionResult Unauthorized(string reason)
+    {
+        return Problem(
+            title: "Unauthorized",
+            detail: reason,
+            statusCode: (int)HttpStatusCode.Unauthorized);
+    }
+
+    [NonAction]
+    protected IActionResult Forbid(string? reason)
+    {
+        return Problem(
+            title: "Forbidden",
+            detail: reason ?? "Permission denied",
+            statusCode: (int)HttpStatusCode.Forbidden);
+    }
+
+    protected IActionResult NotFound(string reason)
+    {
+        return Problem(
+            title: "Not found",
+            detail: reason,
+            statusCode: (int)HttpStatusCode.NotFound);
     }
 }

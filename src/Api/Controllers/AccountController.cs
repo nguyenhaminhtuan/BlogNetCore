@@ -1,6 +1,9 @@
-﻿using System.Security.Claims;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Security.Claims;
+using Api.Auth;
 using Api.Controllers.DTOs;
 using Api.Extensions;
+using Api.Models;
 using Api.Services;
 using FluentValidation;
 using FluentValidation.AspNetCore;
@@ -23,8 +26,21 @@ public class AccountController : ApiControllerBase
         _logger = logger;
         _userService = userService;
     }
-
-    [AllowAnonymous]
+    
+    [Route("unauthorized")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public IActionResult RedirectLogin()
+    {
+        return Unauthorized("Authentication required");
+    }
+    
+    [Route("forbidden")]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public IActionResult RedirectToAccessDenied()
+    {
+        return Forbid("You do not have permission for access");
+    }
+    
     [HttpPost("login")]
     public async Task<IActionResult> Login(
         UserCredentialsDto dto,
@@ -38,15 +54,20 @@ public class AccountController : ApiControllerBase
         var user = await _userService.GetUserByUsernameAsync(dto.Username);
         if (user is null || !_userService.IsValidCredentials(user, dto.Password))
             return BadRequest(
-                title: "Bad credentials.",
-                detail: "Invalid username or password.");
+                title: "Bad credentials",
+                detail: "Invalid username or password");
+
+        if (user.Status == UserStatus.Disabled)
+            return Forbid("Your account has been disabled");
 
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new(ClaimTypes.Name, user.Username),
-            new(ClaimTypes.Email, user.Username),
-            new(ClaimTypes.Role, user.Role.ToString())
+            new(CookieClaimTypes.Identity, user.Id.ToString()),
+            new(CookieClaimTypes.Username, user.Username),
+            new(CookieClaimTypes.Role, user.Role.ToString()),
+            new(CookieClaimTypes.EmailVerified, (user.EmailVerified).ToString()),
+            new(CookieClaimTypes.IsDisabled, (user.Status == UserStatus.Disabled).ToString()),
+            new(CookieClaimTypes.LastChanged, user.LastChanged.ToString("o"))
         };
         var claimsIdentity = new ClaimsIdentity(
             claims,
@@ -64,8 +85,7 @@ public class AccountController : ApiControllerBase
         _logger.LogInformation("User {Username} logged in", user.Username);
         return Ok();
     }
-
-    [AllowAnonymous]
+    
     [HttpPost("register")]
     public async Task<IActionResult> Register(
         UserCredentialsDto dto,
@@ -79,7 +99,8 @@ public class AccountController : ApiControllerBase
         await _userService.RegisterUserAsync(dto.Username, dto.Password);
         return Ok();
     }
-
+    
+    [Authorize]
     [HttpPost("logout")]
     public async Task<IActionResult> Logout()
     {
@@ -89,19 +110,24 @@ public class AccountController : ApiControllerBase
         return Ok();
     }
 
-    [ApiExplorerSettings(IgnoreApi = true)]
-    [AllowAnonymous]
-    [Route("unauthorized")]
-    public IActionResult RedirectLogin()
+    [HttpPost("verify")]
+    public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
     {
-        return Unauthorized();
+        if (!await _userService.VerifyUserEmail(dto.VerifyCode))
+            return BadRequest("Invalid or expired verify code");
+        
+        return Ok();
     }
-    
-    [ApiExplorerSettings(IgnoreApi = true)]
-    [AllowAnonymous]
-    [Route("forbidden")]
-    public IActionResult RedirectToAccessDenied()
+
+    [Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
+    [HttpPost("resend-verify")]
+    public async Task<IActionResult> ResendVerifyEmail()
     {
-        return Forbid();
+        if (User.HasClaim(CookieClaimTypes.EmailVerified, bool.TrueString))
+            return Forbid("Your account already verified");
+        
+        var emailClaim = User.FindFirst(c => c.Type == CookieClaimTypes.Username);
+        await _userService.SendVerifyEmail(emailClaim!.Value, User.GetUserId());
+        return Ok();
     }
 }
