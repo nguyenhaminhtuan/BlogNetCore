@@ -112,9 +112,11 @@ public class AccountController : ApiControllerBase
     [HttpPost("verify")]
     public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
     {
-        if (!await _userService.VerifyUserEmail(dto.VerifyCode))
+        var user = await _userService.GetUserFromVerifyCode(dto.VerifyCode);
+        if (user is null)
             return BadRequest("Invalid or expired verify code");
-        
+
+        await _userService.VerifyUser(user);
         return Ok();
     }
 

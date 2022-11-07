@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography;
-using Api.Data;
+﻿using Api.Data;
 using Api.Exceptions;
 using Api.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -86,7 +85,7 @@ public class UserService : IUserService
     public async Task UpdateUserProfile(User user, string profileName, string displayName)
     {
         var existedUser = await _db.Users
-            .FirstOrDefaultAsync(u => string.Equals(u.ProfileName, profileName));
+            .FirstOrDefaultAsync(u => u.Id != user.Id && string.Equals(u.ProfileName, profileName));
         if (existedUser is not null)
             throw new ConflictException("Profile name given already exists");
 
@@ -104,31 +103,26 @@ public class UserService : IUserService
         _logger.LogInformation("Verify email was sent to {Email}", to);
     }
 
-    public async Task<bool> VerifyUserEmail(string code)
+    public async Task<User?> GetUserFromVerifyCode(string verifyCode)
     {
-        try
-        {
-            var userIdString = _verifyProtector.Unprotect(code);
-            if (!int.TryParse(userIdString, out var userId))
-                return false;
+        var userIdString = _verifyProtector.Unprotect(verifyCode);
+        if (!int.TryParse(userIdString, out var userId))
+            return null;
             
-            var user = await GetUserById(userId);
-            if (user is null)
-                return false;
+        return await GetUserById(userId);
+    }
 
-            if (user.EmailVerified)
-                return true;
-            
+    public async Task VerifyUser(User user)
+    {
+        if (user == null) throw new ArgumentNullException(nameof(user));
+        
+        if (!user.EmailVerified)
+        {
             user.EmailVerified = true;
             user.Status = UserStatus.Active;
             user.LastChanged = DateTime.UtcNow;
             await _db.SaveChangesAsync();
-            _logger.LogInformation("User {UserId} verified at {VerifyTime}", userId, DateTime.UtcNow);
-            return true;
-        }
-        catch (CryptographicException)
-        {
-            return false;
+            _logger.LogInformation("User {UserId} verified at {VerifyTime}", user.Id, DateTime.UtcNow);
         }
     }
 }

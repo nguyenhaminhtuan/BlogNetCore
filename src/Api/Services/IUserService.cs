@@ -11,5 +11,6 @@ public interface IUserService
     public Task RegisterUser(string username, string password);
     public Task UpdateUserProfile(User user, string profileName, string displayName);
     public Task SendVerifyEmail(string to, int userId);
-    public Task<bool> VerifyUserEmail(string code);
+    public Task<User?> GetUserFromVerifyCode(string verifyCode);
+    public Task VerifyUser(User user);
 }
