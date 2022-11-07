@@ -1,8 +1,7 @@
 ﻿namespace Api.Models;
 
-public class User
+public class User : Entity
 {
-    public int Id { get; set; }
     public string Username { get; set; }
     public string Password { get; set; }
     public string ProfileName { get; set; }

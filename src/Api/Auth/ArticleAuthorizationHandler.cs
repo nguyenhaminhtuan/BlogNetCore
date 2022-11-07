@@ -74,7 +74,7 @@ public class ArticleAuthorizationHandler :
 
     private static bool IsAuthenticated(ClaimsPrincipal user)
     {
-        return user.Identity is not null;
+        return user.Identity is not null && user.Identity.IsAuthenticated;
     }
 
     private static bool IsAuthor(ClaimsPrincipal user, Article resource)

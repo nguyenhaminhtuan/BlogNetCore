@@ -2,6 +2,7 @@
 using AutoMapper;
 using Api.Controllers.DTOs;
 using Api.Extensions;
+using Api.Models;
 using Api.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -40,7 +41,7 @@ public class ArticlesController : ApiControllerBase
             return NotFound("One or more tags were not found");
      
         var authorizationResult = await _authorizationService
-            .AuthorizeAsync(User, null, ArticleOperations.Create);
+            .AuthorizeAsync(User, new Article(), ArticleOperations.Create);
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for create article");
         
@@ -56,11 +57,13 @@ public class ArticlesController : ApiControllerBase
     }
 
     [AllowAnonymous]
-    [HttpGet("feed")]
-    public async Task<IActionResult> GetFeed()
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] PaginateQueryParams query)
     {
-        var articles = await _articleService.GetFeedArticles();
-        return Ok(_mapper.Map<IEnumerable<ArticleDto>>(articles));
+        var paginatedArticles = await _articleService.GetPublishedArticlesPagination(
+            query.PageIndex,
+            query.PageSize);
+        return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(paginatedArticles));
     }
 
     [AllowAnonymous]

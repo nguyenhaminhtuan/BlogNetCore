@@ -26,14 +26,15 @@ public class ArticleService : IArticleService
             .Replace(" ", "-");
     }
 
-    public async Task<IEnumerable<Article>> GetFeedArticles()
+    public async Task<PaginatedList<Article>> GetPublishedArticlesPagination(int pageIndex, int pageSize)
     {
-        return await _db.Articles
+        var source = _db.Articles
+            .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Tags)
             .Where(a => a.Status == ArticleStatus.Published)
-            .OrderByDescending(a => a.PublishedAt)
-            .ToListAsync();
+            .OrderByDescending(a => a.PublishedAt);
+        return await PaginatedList<Article>.CreateAsync(source, pageIndex, pageSize);
     }
 
     public Task<Article?> GetArticleById(int id)

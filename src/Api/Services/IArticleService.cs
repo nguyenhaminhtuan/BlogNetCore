@@ -4,7 +4,7 @@ namespace Api.Services;
 
 public interface IArticleService
 {
-    Task<IEnumerable<Article>> GetFeedArticles();
+    Task<PaginatedList<Article>> GetPublishedArticlesPagination(int pageIndex, int pageSize);
     Task<Article?> GetArticleById(int id);
     Task<Article?> GetArticleBySlug(string slug);
     Task<Article> CreateArticle(string title, string content, User author, ISet<Tag> tags);

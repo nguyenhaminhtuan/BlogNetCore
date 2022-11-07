@@ -11,5 +11,6 @@ public class MapperProfile : Profile
         CreateMap<Article, ArticleDto>();
         CreateMap<User, AuthorDto>();
         CreateMap<User, ProfileDto>();
+        CreateMap(typeof(PaginatedList<>), typeof(PaginatedDto<>));
     }
 }
