@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.RegularExpressions;
 using Api.Data;
+using Api.Exceptions;
 using Api.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -53,10 +54,14 @@ public class ArticleService : IArticleService
 
     public async Task<Article> CreateArticle(string title, string content, User author, ISet<Tag> tags)
     {
+        var slug = GenerateSlug(title);
+        if (await _db.Articles.AnyAsync(a => string.Equals(a.Title, slug)))
+            throw new ConflictException("Title given was taken");
+            
         var article = new Article()
         {
             Title = title,
-            Slug = GenerateSlug(title),
+            Slug = slug,
             Content = content,
             Status = ArticleStatus.Draft,
             Tags = tags,
