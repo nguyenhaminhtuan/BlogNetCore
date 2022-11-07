@@ -34,17 +34,15 @@ public class ProfileController : ApiControllerBase
     [HttpGet("{profileName}")]
     public async Task<IActionResult> GetByProfileName(string profileName)
     {
-        var user = await _userService.GetUserProfileAsync(profileName);
+        var user = await _userService.GetUserProfile(profileName);
         return user is null ? NotFound() : Ok(_mapper.Map<ProfileDto>(user));
     }
 
-    [HttpPost]
-    public async Task<IActionResult> Create(CreateProfileDto request)
+    [HttpPut]
+    public async Task<IActionResult> Update(UpdateProfileDto request)
     {
-        var user = await _userService.GetUserByIdAsync(User.GetUserId());
-        await _userService.CreateUserProfileAsync(user!, request.ProfileName, request.DisplayName);
-        return CreatedAtAction(nameof(GetByProfileName), 
-            new {profileName = user!.ProfileName}, 
-            _mapper.Map<ProfileDto>(user));
+        var user = await _userService.GetUserById(User.GetUserId());
+        await _userService.UpdateUserProfile(user!, request.ProfileName, request.DisplayName);
+        return NoContent();
     }
 }

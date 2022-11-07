@@ -30,7 +30,7 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
             return;
         }
         
-        var user = await _userService.GetUserByIdAsync(userPrincipal.GetUserId());
+        var user = await _userService.GetUserById(userPrincipal.GetUserId());
         if (user is null || DateTime.Compare(user.LastChanged, lastChanged) != 0)
             await Reject(context);
     }

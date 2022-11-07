@@ -26,7 +26,7 @@ public class ArticleService : IArticleService
             .Replace(" ", "-");
     }
 
-    public async Task<IEnumerable<Article>> GetFeedArticlesAsync()
+    public async Task<IEnumerable<Article>> GetFeedArticles()
     {
         return await _db.Articles
             .Include(a => a.Author)
@@ -36,13 +36,13 @@ public class ArticleService : IArticleService
             .ToListAsync();
     }
 
-    public Task<Article?> GetArticleByIdAsync(int id)
+    public Task<Article?> GetArticleById(int id)
     {
         return _db.Articles
             .FirstOrDefaultAsync(a => a.Id == id);
     }
 
-    public Task<Article?> GetArticleBySlugAsync(string slug)
+    public Task<Article?> GetArticleBySlug(string slug)
     {
         return _db.Articles
             .Include(a => a.Author)
@@ -50,7 +50,7 @@ public class ArticleService : IArticleService
             .FirstOrDefaultAsync(a => string.Equals(a.Slug, slug));
     }
 
-    public async Task<Article> CreateArticleAsync(string title, string content, User author, ISet<Tag> tags)
+    public async Task<Article> CreateArticle(string title, string content, User author, ISet<Tag> tags)
     {
         var article = new Article()
         {
@@ -67,7 +67,7 @@ public class ArticleService : IArticleService
         return article;
     }
 
-    private async Task ChangeArticleStatusAsync(Article article, ArticleStatus status)
+    private async Task ChangeArticleStatus(Article article, ArticleStatus status)
     {
         article.Status = status;
         if (status == ArticleStatus.Published)
@@ -79,21 +79,21 @@ public class ArticleService : IArticleService
             article.Id, Enum.GetName(typeof(ArticleStatus), article.Status)?.ToLower());
     }
 
-    public Task PublishArticleAsync(Article article)
+    public Task PublishArticle(Article article)
     {
         return article.Status == ArticleStatus.Published
             ? Task.CompletedTask
-            : ChangeArticleStatusAsync(article, ArticleStatus.Published);
+            : ChangeArticleStatus(article, ArticleStatus.Published);
     }
 
-    public Task ArchiveArticleAsync(Article article)
+    public Task ArchiveArticle(Article article)
     {
         return article.Status == ArticleStatus.Archived
             ? Task.CompletedTask
-            : ChangeArticleStatusAsync(article, ArticleStatus.Archived);
+            : ChangeArticleStatus(article, ArticleStatus.Archived);
     }
 
-    public async Task DeleteArticleAsync(Article article)
+    public async Task DeleteArticle(Article article)
     {
         if (article.Status == ArticleStatus.Draft)
         {
@@ -103,10 +103,10 @@ public class ArticleService : IArticleService
         }
         
         if (article.Status != ArticleStatus.Deleted)
-            await ChangeArticleStatusAsync(article, ArticleStatus.Deleted);
+            await ChangeArticleStatus(article, ArticleStatus.Deleted);
     }
 
-    public async Task UpdateArticleAsync(Article article, string title, string content, ISet<Tag> tags)
+    public async Task UpdateArticle(Article article, string title, string content, ISet<Tag> tags)
     {
         article.Title = title;
         article.Slug = GenerateSlug(title);

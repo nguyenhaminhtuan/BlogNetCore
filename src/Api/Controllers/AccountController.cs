@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Security.Claims;
+﻿using System.Security.Claims;
 using Api.Auth;
 using Api.Controllers.DTOs;
 using Api.Extensions;
@@ -51,7 +50,7 @@ public class AccountController : ApiControllerBase
         if (!validationResult.IsValid)
             return BadRequest(ModelState);
 
-        var user = await _userService.GetUserByUsernameAsync(dto.Username);
+        var user = await _userService.GetUserByUsername(dto.Username);
         if (user is null || !_userService.IsValidCredentials(user, dto.Password))
             return BadRequest(
                 title: "Bad credentials",
@@ -96,7 +95,7 @@ public class AccountController : ApiControllerBase
         if (!validationResult.IsValid)
             return BadRequest(ModelState);
         
-        await _userService.RegisterUserAsync(dto.Username, dto.Password);
+        await _userService.RegisterUser(dto.Username, dto.Password);
         return Ok();
     }
     

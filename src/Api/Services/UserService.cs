@@ -38,13 +38,13 @@ public class UserService : IUserService
                PasswordVerificationResult.Success;
     }
     
-    public Task<User?> GetUserByIdAsync(int id)
+    public Task<User?> GetUserById(int id)
     {
         return _db.Users
             .FirstOrDefaultAsync(u => u.Id == id);
     }
 
-    public Task<User?> GetUserByUsernameAsync(string username)
+    public Task<User?> GetUserByUsername(string username)
     {
         return _db.Users
             .FirstOrDefaultAsync(u => string.Equals(u.Username, username));
@@ -52,10 +52,10 @@ public class UserService : IUserService
     
     private async Task<bool> ExistsByUsername(string username)
     {
-        return (await GetUserByUsernameAsync(username)) is not null;
+        return (await GetUserByUsername(username)) is not null;
     }
 
-    public Task<User?> GetUserProfileAsync(string profileName)
+    public Task<User?> GetUserProfile(string profileName)
     {
         return _db.Users
             .Include(u => u.Articles)
@@ -63,7 +63,7 @@ public class UserService : IUserService
             .FirstOrDefaultAsync();
     }
 
-    public async Task RegisterUserAsync(string username, string password)
+    public async Task RegisterUser(string username, string password)
     {
         if (await ExistsByUsername(username))
             throw new ConflictException("Username given already exists");
@@ -83,7 +83,7 @@ public class UserService : IUserService
         _logger.LogInformation("User {Username} registered", user.Username);
     }
 
-    public async Task CreateUserProfileAsync(User user, string profileName, string displayName)
+    public async Task UpdateUserProfile(User user, string profileName, string displayName)
     {
         var existedUser = await _db.Users
             .FirstOrDefaultAsync(u => string.Equals(u.ProfileName, profileName));
@@ -93,7 +93,7 @@ public class UserService : IUserService
         user.ProfileName = profileName;
         user.DisplayName = displayName;
         await _db.SaveChangesAsync();
-        _logger.LogInformation("User {Username} create new profile {ProfileName}",
+        _logger.LogInformation("User {Username} updated profile {ProfileName}",
             user.Username, user.ProfileName);
     }
 
@@ -112,7 +112,7 @@ public class UserService : IUserService
             if (!int.TryParse(userIdString, out var userId))
                 return false;
             
-            var user = await GetUserByIdAsync(userId);
+            var user = await GetUserById(userId);
             if (user is null)
                 return false;
 

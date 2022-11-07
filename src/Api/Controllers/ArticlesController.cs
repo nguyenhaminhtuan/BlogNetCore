@@ -44,8 +44,8 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for create article");
         
-        var author = await _userService.GetUserByIdAsync(User.GetUserId());
-        var article = await _articleService.CreateArticleAsync(
+        var author = await _userService.GetUserById(User.GetUserId());
+        var article = await _articleService.CreateArticle(
             title: request.Title,
             content: request.Content,
             author: author!,
@@ -59,7 +59,7 @@ public class ArticlesController : ApiControllerBase
     [HttpGet("feed")]
     public async Task<IActionResult> GetFeed()
     {
-        var articles = await _articleService.GetFeedArticlesAsync();
+        var articles = await _articleService.GetFeedArticles();
         return Ok(_mapper.Map<IEnumerable<ArticleDto>>(articles));
     }
 
@@ -67,7 +67,7 @@ public class ArticlesController : ApiControllerBase
     [HttpGet("{slug}")]
     public async Task<IActionResult> GetBySlug(string slug)
     {
-        var article = await _articleService.GetArticleBySlugAsync(slug);
+        var article = await _articleService.GetArticleBySlug(slug);
         if (article is null)
             return NotFound("Article not found");
         
@@ -86,7 +86,7 @@ public class ArticlesController : ApiControllerBase
         if (tags.Count != request.TagIds.Count)
             return NotFound("One or more tags were not found");
         
-        var article = await _articleService.GetArticleByIdAsync(id);
+        var article = await _articleService.GetArticleById(id);
         if (article is null)
             return NotFound("Article not found");
         
@@ -95,14 +95,14 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for create article");
         
-        await _articleService.UpdateArticleAsync(article, request.Title, request.Content, tags);
+        await _articleService.UpdateArticle(article, request.Title, request.Content, tags);
         return NoContent();
     }
 
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id)
     {
-        var article = await _articleService.GetArticleByIdAsync(id);
+        var article = await _articleService.GetArticleById(id);
         if (article is null)
             return NotFound("Article not found");
         
@@ -111,14 +111,14 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for delete this article");
         
-        await _articleService.DeleteArticleAsync(article);
+        await _articleService.DeleteArticle(article);
         return NoContent();
     }
 
     [HttpPost("{id:int}/publish")]
     public async Task<IActionResult> Publish(int id)
     {
-        var article = await _articleService.GetArticleByIdAsync(id);
+        var article = await _articleService.GetArticleById(id);
         if (article is null)
             return NotFound("Article not found");
         
@@ -127,14 +127,14 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for update this article");
         
-        await _articleService.PublishArticleAsync(article);
+        await _articleService.PublishArticle(article);
         return NoContent();
     }
     
     [HttpPost("{id:int}/archive")]
     public async Task<IActionResult> Archive(int id)
     {
-        var article = await _articleService.GetArticleByIdAsync(id);
+        var article = await _articleService.GetArticleById(id);
        if (article is null)
              return NotFound("Article not found"); 
         
@@ -143,7 +143,7 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission for archive this article");
         
-        await _articleService.ArchiveArticleAsync(article);
+        await _articleService.ArchiveArticle(article);
         return NoContent();
     }
 }

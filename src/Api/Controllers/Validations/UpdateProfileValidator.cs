@@ -3,9 +3,9 @@ using FluentValidation;
 
 namespace Api.Controllers.Validations;
 
-public class CreateProfileValidator : AbstractValidator<CreateProfileDto>
+public class UpdateProfileValidator : AbstractValidator<UpdateProfileDto>
 {
-    public CreateProfileValidator()
+    public UpdateProfileValidator()
     {
         Transform(x => x.ProfileName, v => v?.Trim())
             .NotEmpty()
