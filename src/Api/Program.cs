@@ -1,6 +1,7 @@
 using System.Reflection;
 using Api.Auth;
 using Api.Data;
+using Api.Exceptions;
 using Api.Models;
 using Api.Services;
 using FluentValidation;
@@ -29,7 +30,10 @@ try
         options.LowercaseUrls = true;
         options.LowercaseQueryStrings = true;
     });
-    builder.Services.AddControllers();
+    builder.Services.AddControllers(options =>
+    {
+        options.Filters.Add<GlobalExceptionFilter>();
+    });
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen();
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
