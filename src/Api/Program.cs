@@ -52,9 +52,9 @@ try
     builder.Services.AddAuthorization(options =>
     {
         options.AddPolicy(AuthorizationPolicies.ActiveUserOnly, policy =>
-            policy.RequireClaim(CookieClaimTypes.IsDisabled, bool.FalseString));
+            policy.RequireClaim(AdditionalClaimTypes.IsDisabled, bool.FalseString));
         options.AddPolicy(AuthorizationPolicies.VerifiedUserOnly, policy =>
-            policy.RequireClaim(CookieClaimTypes.EmailVerified, bool.TrueString));
+            policy.RequireClaim(AdditionalClaimTypes.EmailVerified, bool.TrueString));
     });
     builder.Services.AddAutoMapper(typeof(Program));
     builder.Services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());

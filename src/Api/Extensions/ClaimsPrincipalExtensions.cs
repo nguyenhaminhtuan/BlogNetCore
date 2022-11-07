@@ -8,8 +8,7 @@ public static class ClaimsPrincipalExtensions
 {
     public static int GetUserId(this ClaimsPrincipal claimsPrincipal)
     {
-        var userIdClaim = claimsPrincipal.Claims
-            .FirstOrDefault(c => c.Type == CookieClaimTypes.Identity);
+        var userIdClaim = claimsPrincipal.FindFirst(c => c.Type == ClaimTypes.Name);
         if (userIdClaim is null || !int.TryParse(userIdClaim.Value, out var userId))
             throw new AuthenticationException();
 

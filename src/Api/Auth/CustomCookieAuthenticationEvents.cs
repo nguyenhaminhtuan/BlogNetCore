@@ -17,7 +17,7 @@ public class CustomCookieAuthenticationEvents : CookieAuthenticationEvents
     public override async Task ValidatePrincipal(CookieValidatePrincipalContext context)
     {
         var userPrincipal = context.Principal!;
-        var lastChangedClaim = userPrincipal.FindFirst(c => c.Type == CookieClaimTypes.LastChanged);
+        var lastChangedClaim = userPrincipal.FindFirst(c => c.Type == AdditionalClaimTypes.LastChanged);
         if (string.IsNullOrWhiteSpace(lastChangedClaim?.Value))
         {
             await Reject(context);

@@ -61,12 +61,12 @@ public class AccountController : ApiControllerBase
 
         var claims = new List<Claim>
         {
-            new(CookieClaimTypes.Identity, user.Id.ToString()),
-            new(CookieClaimTypes.Username, user.Username),
-            new(CookieClaimTypes.Role, user.Role.ToString()),
-            new(CookieClaimTypes.EmailVerified, (user.EmailVerified).ToString()),
-            new(CookieClaimTypes.IsDisabled, (user.Status == UserStatus.Disabled).ToString()),
-            new(CookieClaimTypes.LastChanged, user.LastChanged.ToString("o"))
+            new(ClaimTypes.Name, user.Id.ToString()),
+            new(ClaimTypes.Role, user.Role.ToString()),
+            new(ClaimTypes.Email, user.Username),
+            new(AdditionalClaimTypes.EmailVerified, (user.EmailVerified).ToString()),
+            new(AdditionalClaimTypes.IsDisabled, (user.Status == UserStatus.Disabled).ToString()),
+            new(AdditionalClaimTypes.LastChanged, user.LastChanged.ToString("o"))
         };
         var claimsIdentity = new ClaimsIdentity(
             claims,
@@ -124,10 +124,10 @@ public class AccountController : ApiControllerBase
     [HttpPost("resend-verify")]
     public async Task<IActionResult> ResendVerifyEmail()
     {
-        if (User.HasClaim(CookieClaimTypes.EmailVerified, bool.TrueString))
+        if (User.HasClaim(AdditionalClaimTypes.EmailVerified, bool.TrueString))
             return Forbid("Your account already verified");
         
-        var emailClaim = User.FindFirst(c => c.Type == CookieClaimTypes.Username);
+        var emailClaim = User.FindFirst(c => c.Type == ClaimTypes.Email);
         await _userService.SendVerifyEmail(emailClaim!.Value, User.GetUserId());
         return Ok();
     }

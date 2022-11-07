@@ -29,14 +29,14 @@ public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
                 context,
                 (int)HttpStatusCode.Forbidden,
                 detail: "Permission denied");
-            if (IsContainClaimsRequirement(requirements, CookieClaimTypes.IsDisabled))
+            if (IsContainClaimsRequirement(requirements, AdditionalClaimTypes.IsDisabled))
             {
                 problem.Detail = "Your account has been disabled";
                 await context.Response.WriteAsJsonAsync(problem);
                 return;
             }
             
-            if (IsContainClaimsRequirement(requirements, CookieClaimTypes.EmailVerified))
+            if (IsContainClaimsRequirement(requirements, AdditionalClaimTypes.EmailVerified))
             {
                 problem.Detail = "Your account needs email verification";
                 await context.Response.WriteAsJsonAsync(problem);
