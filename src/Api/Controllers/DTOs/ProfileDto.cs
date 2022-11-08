@@ -3,7 +3,8 @@
 public class ProfileDto
 {
    public int Id { get; set; }
-   public string Username { get; set; } = string.Empty;
+   public string ProfileName { get; set; } = string.Empty;
    public string DisplayName { get; set; } = string.Empty;
-   public ICollection<ArticleDto> Articles { get; set; } = new List<ArticleDto>();
+   public bool IsDisabled { get; set; }
+   public int TotalArticles { get; set; }
 }

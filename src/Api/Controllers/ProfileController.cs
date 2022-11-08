@@ -1,48 +1,48 @@
-﻿using Api.Auth;
-using Api.Controllers.DTOs;
+﻿using Api.Controllers.DTOs;
+using Api.Models;
 using AutoMapper;
-using Api.Extensions;
 using Api.Services;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Api.Controllers;
 
-[Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
-[Authorize(Policy = AuthorizationPolicies.VerifiedUserOnly)]
 public class ProfileController : ApiControllerBase
 {
     private readonly IMapper _mapper;
     private readonly IUserService _userService;
+    private readonly IArticleService _articleService;
 
     public ProfileController(
         IMapper mapper,
-        IUserService userService)
+        IUserService userService,
+        IArticleService articleService)
     {
         _mapper = mapper;
         _userService = userService;
+        _articleService = articleService;
     }
     
-    [HttpGet]
-    public async Task<IActionResult> GetCurrentUserProfile()
-    {
-        await Task.CompletedTask;
-        return Ok();
-    }
-
-    [AllowAnonymous]
     [HttpGet("{profileName}")]
     public async Task<IActionResult> GetByProfileName(string profileName)
     {
-        var user = await _userService.GetUserProfile(profileName);
-        return user is null ? NotFound() : Ok(_mapper.Map<ProfileDto>(user));
+        var user = await _userService.GetUserByProfileName(profileName);
+        if (user is null)
+            return NotFound("Profile not found");
+        
+        var profile = _mapper.Map<ProfileDto>(user);
+        profile.TotalArticles = await _articleService.CountPublishedArticlesByAuthor(user.Id);
+        return Ok(profile);
     }
-
-    [HttpPut]
-    public async Task<IActionResult> Update(UpdateProfileDto request)
+    
+    [HttpGet("{profileName}/articles")]
+    public async Task<IActionResult> GetArticles(string profileName, [FromQuery] PaginateParams query)
     {
-        var user = await _userService.GetUserById(User.GetUserId());
-        await _userService.UpdateUserProfile(user!, request.ProfileName, request.DisplayName);
-        return NoContent();
+        var user = await _userService.GetUserByProfileName(profileName);
+        if (user is null)
+            return NotFound("Profile not found");
+        
+        var articlesPaginated = await _articleService
+            .GetPublishedArticlesByAuthorPagination(user.Id, query);
+        return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(articlesPaginated));
     }
 }

@@ -58,11 +58,9 @@ public class ArticlesController : ApiControllerBase
 
     [AllowAnonymous]
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] PaginateQueryParams query)
+    public async Task<IActionResult> GetAll([FromQuery] PaginateParams query)
     {
-        var paginatedArticles = await _articleService.GetPublishedArticlesPagination(
-            query.PageIndex,
-            query.PageSize);
+        var paginatedArticles = await _articleService.GetPublishedArticlesByPagination(query);
         return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(paginatedArticles));
     }
 

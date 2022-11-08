@@ -9,8 +9,16 @@ public class MapperProfile : Profile
     {
         CreateMap<Tag, TagDto>();
         CreateMap<Article, ArticleDto>();
-        CreateMap<User, AuthorDto>();
-        CreateMap<User, ProfileDto>();
+        CreateMap<User, AuthorDto>()
+            .ForMember(
+                dest => dest.IsDisabled,
+                src =>
+                    src.MapFrom(u => u.Status == UserStatus.Disabled));
+        CreateMap<User, ProfileDto>()
+            .ForMember(
+                dest => dest.IsDisabled,
+                src =>
+                    src.MapFrom(u => u.Status == UserStatus.Disabled));
         CreateMap(typeof(PaginatedList<>), typeof(PaginatedDto<>));
     }
 }

@@ -54,10 +54,9 @@ public class UserService : IUserService
         return (await GetUserByUsername(username)) is not null;
     }
 
-    public Task<User?> GetUserProfile(string profileName)
+    public Task<User?> GetUserByProfileName(string profileName)
     {
         return _db.Users
-            .Include(u => u.Articles)
             .Where(u => string.Equals(u.ProfileName, profileName))
             .FirstOrDefaultAsync();
     }
