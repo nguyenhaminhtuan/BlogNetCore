@@ -81,7 +81,7 @@ public class UserService : IUserService
         _logger.LogInformation("User {Username} registered", user.Username);
     }
 
-    public async Task UpdateUserProfile(User user, string profileName, string displayName)
+    public async Task UpdateUser(User user, string profileName, string displayName)
     {
         var existedUser = await _db.Users
             .FirstOrDefaultAsync(u => u.Id != user.Id && string.Equals(u.ProfileName, profileName));

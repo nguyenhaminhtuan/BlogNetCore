@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
 
@@ -8,6 +9,10 @@ namespace Api.Controllers;
 [Route("api/[controller]")]
 [Produces("application/json" , "application/problem+json")]
 [Consumes("application/json")]
+[SwaggerResponse(
+    statusCode: StatusCodes.Status500InternalServerError,
+    description: "Can't handle request because got an internal server error",
+    typeof(ProblemDetails))]
 public abstract class ApiControllerBase : ControllerBase
 {
     [NonAction]

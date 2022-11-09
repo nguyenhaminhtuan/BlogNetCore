@@ -4,13 +4,18 @@ using Api.Extensions;
 using Api.Models;
 using Api.Services;
 using AutoMapper;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
 
 [Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
 [Authorize(Policy = AuthorizationPolicies.VerifiedUserOnly)]
+[SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+[SwaggerResponse(StatusCodes.Status403Forbidden, "Unverified or disabled account")]
 public class UserController : ApiControllerBase
 {
     private readonly IMapper _mapper;
@@ -28,14 +33,27 @@ public class UserController : ApiControllerBase
     }
     
     [HttpPut]
-    public async Task<IActionResult> Update(UpdateProfileDto request)
+    [SwaggerOperation(Summary = "Update current logged in user")]
+    [SwaggerResponse(StatusCodes.Status204NoContent, "User was updated successfully")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid user update data")]
+    [SwaggerResponse(StatusCodes.Status409Conflict, "New profile name was taken")]
+    public async Task<IActionResult> Update(
+        UpdateUserDto dto,
+        [FromServices] IValidator<UpdateUserDto> validator)
     {
+        var validationResult = await validator.ValidateAsync(dto);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
         var user = await _userService.GetUserById(User.GetUserId());
-        await _userService.UpdateUserProfile(user!, request.ProfileName, request.DisplayName);
+        await _userService.UpdateUser(user!, dto.ProfileName, dto.DisplayName);
         return NoContent();
     }
     
     [HttpGet("profile")]
+    [SwaggerOperation(Summary = "Get current logged in user profile")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Get profile successfully", typeof(ProfileDto))]
     public async Task<IActionResult> GetProfile()
     {
         var user = await _userService.GetUserById(User.GetUserId());
@@ -45,6 +63,8 @@ public class UserController : ApiControllerBase
     }
 
     [HttpGet("articles")]
+    [SwaggerOperation(Summary = "Get current logged in user articles")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Get articles successfully", typeof(PaginatedDto<ArticleDto>))]
     public async Task<IActionResult> GetArticles([FromQuery] PaginateParams query)
     {
         var articlesPaginated = await _articleService

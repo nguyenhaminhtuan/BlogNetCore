@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
 
@@ -41,6 +42,10 @@ public class AccountController : ApiControllerBase
     }
     
     [HttpPost("login")]
+    [SwaggerOperation(Summary = "Login use username and password")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Logged in successfully")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid input data or bad credentials")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Account disabled")]
     public async Task<IActionResult> Login(
         UserCredentialsDto dto,
         [FromServices] IValidator<UserCredentialsDto> validator)
@@ -86,6 +91,9 @@ public class AccountController : ApiControllerBase
     }
     
     [HttpPost("register")]
+    [SwaggerOperation(Summary = "Register account use username and password")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Account registered successfully")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid register account data")]
     public async Task<IActionResult> Register(
         UserCredentialsDto dto,
         [FromServices] IValidator<UserCredentialsDto> validator)
@@ -99,8 +107,11 @@ public class AccountController : ApiControllerBase
         return Ok();
     }
     
-    [Authorize]
     [HttpPost("logout")]
+    [Authorize]
+    [SwaggerOperation(Summary = "Logout account")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Account logged out successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
     public async Task<IActionResult> Logout()
     {
         var userId = User.GetUserId();
@@ -110,6 +121,9 @@ public class AccountController : ApiControllerBase
     }
 
     [HttpPost("verify")]
+    [SwaggerOperation(Summary = "Account email verification")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Account was verified")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid or expired verify code")]
     public async Task<IActionResult> VerifyEmail(VerifyEmailDto dto)
     {
         var user = await _userService.GetUserFromVerifyCode(dto.VerifyCode);
@@ -120,8 +134,12 @@ public class AccountController : ApiControllerBase
         return Ok();
     }
 
-    [Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
     [HttpPost("resend-verify")]
+    [Authorize(Policy = AuthorizationPolicies.ActiveUserOnly)]
+    [SwaggerOperation(Summary = "Resend verify email link")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Resend verify email successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Account already verified")]
     public async Task<IActionResult> ResendVerifyEmail()
     {
         if (User.HasClaim(AdditionalClaimTypes.EmailVerified, bool.TrueString))

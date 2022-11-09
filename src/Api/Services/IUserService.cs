@@ -9,7 +9,7 @@ public interface IUserService
     public Task<User?> GetUserByUsername(string username);
     public Task<User?> GetUserByProfileName(string profileName);
     public Task RegisterUser(string username, string password);
-    public Task UpdateUserProfile(User user, string profileName, string displayName);
+    public Task UpdateUser(User user, string profileName, string displayName);
     public Task SendVerifyEmail(string to, int userId);
     public Task<User?> GetUserFromVerifyCode(string verifyCode);
     public Task VerifyUser(User user);

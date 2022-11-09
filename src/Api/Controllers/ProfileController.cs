@@ -3,6 +3,7 @@ using Api.Models;
 using AutoMapper;
 using Api.Services;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Api.Controllers;
 
@@ -23,6 +24,9 @@ public class ProfileController : ApiControllerBase
     }
     
     [HttpGet("{profileName}")]
+    [SwaggerOperation(Summary = "Get profile by profile name")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Get profile successfully", typeof(ProfileDto))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Profile not found")]
     public async Task<IActionResult> GetByProfileName(string profileName)
     {
         var user = await _userService.GetUserByProfileName(profileName);
@@ -35,6 +39,9 @@ public class ProfileController : ApiControllerBase
     }
     
     [HttpGet("{profileName}/articles")]
+    [SwaggerOperation(Summary = "Get published articles by profile name and pagination")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Get articles successfully", typeof(PaginatedDto<ArticleDto>))]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Profile not found")]
     public async Task<IActionResult> GetArticles(string profileName, [FromQuery] PaginateParams query)
     {
         var user = await _userService.GetUserByProfileName(profileName);

@@ -1,6 +1,6 @@
 ﻿namespace Api.Controllers.DTOs;
 
-public class UpdateProfileDto
+public class UpdateUserDto
 {
     public string ProfileName { get; set; }
     public string DisplayName { get; set; }

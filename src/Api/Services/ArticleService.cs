@@ -52,7 +52,7 @@ public class ArticleService : IArticleService
             .FirstOrDefaultAsync(a => string.Equals(a.Slug, slug));
     }
 
-    public async Task<Article> CreateArticle(string title, string content, User author, ISet<Tag> tags)
+    public async Task<Article> CreateArticle(string title, string content, int authorId, ISet<Tag> tags)
     {
         var slug = GenerateSlug(title);
         if (await _db.Articles.AnyAsync(a => string.Equals(a.Title, slug)))
@@ -65,7 +65,7 @@ public class ArticleService : IArticleService
             Content = content,
             Status = ArticleStatus.Draft,
             Tags = tags,
-            Author = author
+            AuthorId = authorId
         };
         await _db.AddAsync(article);
         await _db.SaveChangesAsync();
