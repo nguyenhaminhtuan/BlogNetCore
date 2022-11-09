@@ -71,6 +71,7 @@ try
 
     var app = builder.Build();
     
+    app.UseCors();
     app.UseExceptionHandler("/error");
     if (app.Environment.IsDevelopment())
     {
