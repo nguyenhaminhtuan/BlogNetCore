@@ -41,7 +41,7 @@ public abstract class ApiControllerBase : ControllerBase
         return Problem(
             title: "Unauthorized",
             detail: reason,
-            statusCode: (int)HttpStatusCode.Unauthorized);
+            statusCode: StatusCodes.Status401Unauthorized);
     }
 
     [NonAction]
@@ -50,7 +50,7 @@ public abstract class ApiControllerBase : ControllerBase
         return Problem(
             title: "Forbidden",
             detail: reason ?? "Permission denied",
-            statusCode: (int)HttpStatusCode.Forbidden);
+            statusCode: StatusCodes.Status403Forbidden);
     }
 
     protected IActionResult NotFound(string reason)
@@ -58,6 +58,6 @@ public abstract class ApiControllerBase : ControllerBase
         return Problem(
             title: "Not found",
             detail: reason,
-            statusCode: (int)HttpStatusCode.NotFound);
+            statusCode: StatusCodes.Status404NotFound);
     }
 }

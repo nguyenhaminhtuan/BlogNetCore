@@ -27,7 +27,7 @@ public class CustomAuthorizationMiddlewareResultHandler : IAuthorizationMiddlewa
             var requirements = authorizeResult.AuthorizationFailure.FailedRequirements.ToList();
             var problem = _problemDetailsFactory.CreateProblemDetails(
                 context,
-                (int)HttpStatusCode.Forbidden,
+                StatusCodes.Status403Forbidden,
                 detail: "Permission denied");
             if (IsContainClaimsRequirement(requirements, AdditionalClaimTypes.IsDisabled))
             {

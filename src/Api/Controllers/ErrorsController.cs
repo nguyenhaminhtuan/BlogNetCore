@@ -12,6 +12,6 @@ public class ErrorsController : ApiControllerBase
         return Problem(
             title: "Something went wrong.",
             detail: "An error occured while processing your request.",
-            statusCode: (int)HttpStatusCode.InternalServerError);
+            statusCode: StatusCodes.Status500InternalServerError);
     }
 }

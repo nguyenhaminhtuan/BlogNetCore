@@ -20,12 +20,12 @@ public class GlobalExceptionFilter : IExceptionFilter
         {
             var problem = _problemDetailsFactory.CreateProblemDetails(
                 context.HttpContext,
-                (int)HttpStatusCode.Conflict, 
+                StatusCodes.Status409Conflict, 
                 title: "Conflict",
                 detail: context.Exception.Message);
             context.Result = new ObjectResult(problem)
             {
-                StatusCode = (int)HttpStatusCode.Conflict
+                StatusCode = StatusCodes.Status409Conflict
             };
             context.ExceptionHandled = true;
         }
