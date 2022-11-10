@@ -13,7 +13,7 @@ public interface IArticleService
     public Task DeleteArticle(Article article);
     public Task UpdateArticle(Article article, string title, string content, ISet<Tag> tags);
     public Task<int> CountPublishedArticlesByAuthor(int authorId);
-
     public Task<PaginatedList<Article>> GetArticlesByAuthorFilterPagination(int authorId, int pageIndex, int pageSize,
         ArticleStatus status);
+    public Task<PaginatedList<Article>> GetPublishedArticlesByTagPagination(int tagId, int pageIndex, int pageSize);
 }

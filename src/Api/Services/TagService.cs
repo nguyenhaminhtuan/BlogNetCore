@@ -19,4 +19,14 @@ public class TagService : ITagService
             .Where(t => tagIds.Contains(t.Id))
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Tag>> GetTags()
+    {
+        return await _db.Tags.ToListAsync();
+    }
+
+    public async Task<Tag?> GetTagBySlug(string slug)
+    {
+        return await _db.Tags.FirstOrDefaultAsync(t => string.Equals(t.Slug, slug));
+    }
 }

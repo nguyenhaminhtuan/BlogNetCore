@@ -138,8 +138,16 @@ public class ArticleService : IArticleService
             .Include(a => a.Author)
             .Include(a => a.Tags)
             .Where(a => a.AuthorId == authorId)
-            .Where(a => a.Status == status);
+            .Where(a => a.Status == status)
+            .OrderByDescending(a => status == ArticleStatus.Draft ? a.CreatedAt : a.PublishedAt);
+        return PaginatedList<Article>.CreateAsync(queryable, pageIndex, pageSize);
+    }
 
+    public Task<PaginatedList<Article>> GetPublishedArticlesByTagPagination(int tagId, int pageIndex, int pageSize)
+    {
+        var queryable = _db.Articles
+            .AsNoTracking()
+            .Include(a => a.Tags.Where(t => t.Id == tagId));
         return PaginatedList<Article>.CreateAsync(queryable, pageIndex, pageSize);
     }
 }
