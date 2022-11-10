@@ -11,7 +11,14 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
+var configuration = new ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json")
+    .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", true)
+    .Build();
+
 Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(configuration)
     .WriteTo.Console()
     .CreateBootstrapLogger();
 
