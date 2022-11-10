@@ -65,10 +65,25 @@ public class UserController : ApiControllerBase
     [HttpGet("articles")]
     [SwaggerOperation(Summary = "Get current logged in user articles")]
     [SwaggerResponse(StatusCodes.Status200OK, "Get articles successfully", typeof(PaginatedDto<ArticleDto>))]
-    public async Task<IActionResult> GetArticles([FromQuery] PaginateParams query)
+    public async Task<IActionResult> GetArticles(
+        [FromServices] IValidator<PaginateQuery> validator,
+        [FromQuery] PaginateQuery paginate,
+        [FromQuery] ArticleStatus status = ArticleStatus.Published)
     {
+        if (status > ArticleStatus.Archived)
+            ModelState.AddModelError("status", "Invalid article status");
+        
+        var validationResult = await validator.ValidateAsync(paginate);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid || !ModelState.IsValid)
+            return BadRequest(ModelState);
+
         var articlesPaginated = await _articleService
-            .GetPublishedArticlesByAuthorPagination(User.GetUserId(), query);
+            .GetArticlesByAuthorFilterPagination(
+                User.GetUserId(), 
+                paginate.PageIndex,
+                paginate.PageSize,
+                status);
         return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(articlesPaginated));
     }
 }

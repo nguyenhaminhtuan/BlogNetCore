@@ -4,5 +4,5 @@ namespace Api.Services;
 
 public interface ITagService
 {
-    Task<IEnumerable<Tag>> GetTagsById(ISet<int> tagIds);
+    public Task<IEnumerable<Tag>> GetTagsById(ISet<int> tagIds);
 }

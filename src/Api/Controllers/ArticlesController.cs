@@ -4,6 +4,8 @@ using Api.Controllers.DTOs;
 using Api.Extensions;
 using Api.Models;
 using Api.Services;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -38,8 +40,15 @@ public class ArticlesController : ApiControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Do not have permission for create a draft article")]
     [SwaggerResponse(StatusCodes.Status409Conflict, "Article title already taken")]
-    public async Task<IActionResult> Create(CreateArticleDto request)
+    public async Task<IActionResult> Create(
+        CreateArticleDto request,
+        [FromServices] IValidator<CreateArticleDto> validator)
     {
+        var validationResult = await validator.ValidateAsync(request);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
         var tags = (await _tagService.GetTagsById(request.TagIds)).ToHashSet();
         if (tags.Count != request.TagIds.Count)
             return BadRequest("One or more tags were not found");
@@ -64,9 +73,17 @@ public class ArticlesController : ApiControllerBase
     [AllowAnonymous]
     [SwaggerOperation(Summary = "Get all published articles by pagination")]
     [SwaggerResponse(StatusCodes.Status200OK, "Get articles successfully", typeof(PaginatedDto<ArticleDto>))]
-    public async Task<IActionResult> GetAll([FromQuery] PaginateParams query)
+    public async Task<IActionResult> GetAll(
+        [FromQuery] PaginateQuery query,
+        [FromServices] IValidator<PaginateQuery> validator)
     {
-        var paginatedArticles = await _articleService.GetPublishedArticlesByPagination(query);
+        var validationResult = await validator.ValidateAsync(query);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
+        var paginatedArticles = await _articleService
+            .GetPublishedArticlesByPagination(query.PageIndex, query.PageSize);
         return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(paginatedArticles));
     }
 
@@ -96,8 +113,16 @@ public class ArticlesController : ApiControllerBase
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
     [SwaggerResponse(StatusCodes.Status403Forbidden, "Do not have permission for update article")]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
-    public async Task<IActionResult> Update(UpdateArticleDto request, int id)
+    public async Task<IActionResult> Update(
+        int id,
+        UpdateArticleDto request,
+        [FromServices] IValidator<UpdateArticleDto> validator)
     {
+        var validationResult = await validator.ValidateAsync(request);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
         var tags = (await _tagService.GetTagsById(request.TagIds)).ToHashSet();
         if (tags.Count != request.TagIds.Count)
             return BadRequest("One or more tags were not found");

@@ -42,14 +42,14 @@ public class ProfileController : ApiControllerBase
     [SwaggerOperation(Summary = "Get published articles by profile name and pagination")]
     [SwaggerResponse(StatusCodes.Status200OK, "Get articles successfully", typeof(PaginatedDto<ArticleDto>))]
     [SwaggerResponse(StatusCodes.Status404NotFound, "Profile not found")]
-    public async Task<IActionResult> GetArticles(string profileName, [FromQuery] PaginateParams query)
+    public async Task<IActionResult> GetArticles(string profileName, [FromQuery] PaginateQuery query)
     {
         var user = await _userService.GetUserByProfileName(profileName);
         if (user is null)
             return NotFound("Profile not found");
         
         var articlesPaginated = await _articleService
-            .GetPublishedArticlesByAuthorPagination(user.Id, query);
+            .GetArticlesByAuthorFilterPagination(user.Id, query.PageIndex, query.PageSize, ArticleStatus.Published);
         return Ok(_mapper.Map<PaginatedDto<ArticleDto>>(articlesPaginated));
     }
 }

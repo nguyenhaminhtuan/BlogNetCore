@@ -27,7 +27,7 @@ public class ArticleService : IArticleService
             .Replace(" ", "-");
     }
 
-    public async Task<PaginatedList<Article>> GetPublishedArticlesByPagination(PaginateParams paginate)
+    public async Task<PaginatedList<Article>> GetPublishedArticlesByPagination(int pageIndex, int pageSize)
     {
         var source = _db.Articles
             .AsNoTracking()
@@ -35,7 +35,7 @@ public class ArticleService : IArticleService
             .Include(a => a.Tags)
             .Where(a => a.Status == ArticleStatus.Published)
             .OrderByDescending(a => a.PublishedAt);
-        return await PaginatedList<Article>.CreateAsync(source, paginate.PageIndex, paginate.PageSize);
+        return await PaginatedList<Article>.CreateAsync(source, pageIndex, pageSize);
     }
 
     public Task<Article?> GetArticleById(int id)
@@ -130,13 +130,16 @@ public class ArticleService : IArticleService
             .CountAsync(a => a.AuthorId == authorId);
     }
 
-    public Task<PaginatedList<Article>> GetPublishedArticlesByAuthorPagination(int authorId, PaginateParams paginate)
+    public Task<PaginatedList<Article>> GetArticlesByAuthorFilterPagination(int authorId, int pageIndex, int pageSize, 
+        ArticleStatus status)
     {
-        var source = _db.Articles
+        var queryable = _db.Articles
             .AsNoTracking()
+            .Include(a => a.Author)
+            .Include(a => a.Tags)
             .Where(a => a.AuthorId == authorId)
-            .Where(a => a.Status == ArticleStatus.Published)
-            .OrderByDescending(a => a.PublishedAt);
-        return PaginatedList<Article>.CreateAsync(source, paginate.PageIndex, paginate.PageSize);
+            .Where(a => a.Status == status);
+
+        return PaginatedList<Article>.CreateAsync(queryable, pageIndex, pageSize);
     }
 }
