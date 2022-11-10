@@ -1,6 +1,5 @@
 ﻿using System.Security.Authentication;
 using System.Security.Claims;
-using Api.Auth;
 
 namespace Api.Extensions;
 
