@@ -12,6 +12,8 @@ public class Article : Entity
     public int AuthorId { get; set; }
     public User Author { get; set; }
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Vote> Votes { get; set; } = new List<Vote>();
 }
 
 public enum ArticleStatus : byte
