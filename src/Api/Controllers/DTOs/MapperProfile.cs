@@ -8,7 +8,10 @@ public class MapperProfile : Profile
     public MapperProfile()
     {
         CreateMap<Tag, TagDto>();
-        CreateMap<Article, ArticleDto>();
+        CreateMap<Article, ArticleDto>()
+            .ForMember(dest => dest.IsArchived,
+                src => 
+                    src.MapFrom(a => a.Status == ArticleStatus.Archived));
         CreateMap<User, AuthorDto>()
             .ForMember(
                 dest => dest.IsDisabled,
