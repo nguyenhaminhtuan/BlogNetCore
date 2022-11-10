@@ -1,4 +1,5 @@
-﻿using Api.Data;
+﻿using System.Security.Cryptography;
+using Api.Data;
 using Api.Exceptions;
 using Api.Models;
 using Microsoft.AspNetCore.DataProtection;
@@ -104,11 +105,18 @@ public class UserService : IUserService
 
     public async Task<User?> GetUserFromVerifyCode(string verifyCode)
     {
-        var userIdString = _verifyProtector.Unprotect(verifyCode);
-        if (!int.TryParse(userIdString, out var userId))
-            return null;
+        try
+        {
+            var userIdString = _verifyProtector.Unprotect(verifyCode);
+            if (!int.TryParse(userIdString, out var userId))
+                return null;
             
-        return await GetUserById(userId);
+            return await GetUserById(userId);
+        }
+        catch (CryptographicException)
+        {
+            return null;
+        }
     }
 
     public async Task VerifyUser(User user)
