@@ -19,7 +19,6 @@ var configuration = new ConfigurationBuilder()
 
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(configuration)
-    .WriteTo.Console()
     .CreateBootstrapLogger();
 
 try
@@ -80,6 +79,8 @@ try
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IArticleService, ArticleService>();
     builder.Services.AddScoped<IEmailService, FakeEmailService>();
+    builder.Services.AddScoped<ICommentService, CommentService>();
+    builder.Services.AddScoped<IVoteService, VoteService>();
 
     var app = builder.Build();
     

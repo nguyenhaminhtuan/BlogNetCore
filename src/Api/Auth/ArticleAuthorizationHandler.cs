@@ -32,7 +32,30 @@ public class ArticleAuthorizationHandler :
         if (requirement.Name == ArticleOperations.Archive.Name && CanArchive(context.User, resource))
             context.Succeed(requirement);
         
+        if (requirement.Name == ArticleOperations.Vote.Name && CanVote(context.User, resource))
+            context.Succeed(requirement);
+        
         return Task.CompletedTask;
+    }
+    
+    private static bool IsAuthenticated(ClaimsPrincipal user)
+    {
+        return user.Identity is not null && user.Identity.IsAuthenticated;
+    }
+
+    private static bool IsAuthor(ClaimsPrincipal user, Article resource)
+    {
+        return IsAuthenticated(user) && user.GetUserId() == resource.AuthorId;
+    }
+
+    private static bool IsAdmin(ClaimsPrincipal user)
+    {
+        return IsAuthenticated(user) && user.IsInRole(UserRole.Admin.ToString());
+    }
+
+    private static bool IsPublished(Article article)
+    {
+        return article.Status == ArticleStatus.Published;
     }
 
     private static bool CanCreate(ClaimsPrincipal user)
@@ -71,24 +94,9 @@ public class ArticleAuthorizationHandler :
     {
         return IsAuthor(user, article) & article.Status == ArticleStatus.Published;
     }
-
-    private static bool IsAuthenticated(ClaimsPrincipal user)
+    
+    private static bool CanVote(ClaimsPrincipal user, Article article)
     {
-        return user.Identity is not null && user.Identity.IsAuthenticated;
-    }
-
-    private static bool IsAuthor(ClaimsPrincipal user, Article resource)
-    {
-        return IsAuthenticated(user) && user.GetUserId() == resource.AuthorId;
-    }
-
-    private static bool IsAdmin(ClaimsPrincipal user)
-    {
-        return IsAuthenticated(user) && user.IsInRole(UserRole.Admin.ToString());
-    }
-
-    private static bool IsPublished(Article article)
-    {
-        return article.Status == ArticleStatus.Published;
+        return IsAuthenticated(user) && article.Status == ArticleStatus.Published;
     }
 }

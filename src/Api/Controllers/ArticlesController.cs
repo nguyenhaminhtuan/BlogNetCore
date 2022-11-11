@@ -20,17 +20,20 @@ public class ArticlesController : ApiControllerBase
     private readonly IAuthorizationService _authorizationService;
     private readonly IArticleService _articleService;
     private readonly ITagService _tagService;
+    private readonly IVoteService _voteService;
 
     public ArticlesController(
         IMapper mapper,
         IAuthorizationService authorizationService,
         IArticleService articleService,
-        ITagService tagService)
+        ITagService tagService,
+        IVoteService voteService)
     {
         _mapper = mapper;
         _authorizationService = authorizationService;
         _articleService = articleService;
         _tagService = tagService;
+        _voteService = voteService;
     }
 
     [HttpPost]
@@ -206,16 +209,36 @@ public class ArticlesController : ApiControllerBase
 
     [HttpPost("{id:int}/vote")]
     [SwaggerOperation(Summary = "Upvote article")]
-    public Task<IActionResult> Upvote(int id)
+    public async Task<IActionResult> Upvote(int id)
     {
-        throw new NotImplementedException();
+        var article = await _articleService.GetArticleById(id);
+        if (article is null)
+            return NotFound("Article not found");
+        
+        var authorizationResult = await _authorizationService
+            .AuthorizeAsync(User, article, ArticleOperations.Vote);
+        if (!authorizationResult.Succeeded)
+            return Forbid("You do not have permission to vote this article");
+
+        await _voteService.UpvoteArticle(article.Id, User.GetUserId());
+        return Ok();
     }
 
     [HttpDelete("{id:int}/vote")]
     [SwaggerOperation(Summary = "Downvote article")]
-    public Task<IActionResult> Downvote(int id)
+    public async Task<IActionResult> Downvote(int id)
     {
-        throw new NotImplementedException();
+        var article = await _articleService.GetArticleById(id);
+        if (article is null)
+            return NotFound("Article not found");
+        
+        var authorizationResult = await _authorizationService
+            .AuthorizeAsync(User, article, ArticleOperations.Vote);
+        if (!authorizationResult.Succeeded)
+            return Forbid("You do not have permission to vote this article");
+
+        await _voteService.DownvoteArticle(article.Id, User.GetUserId());
+        return NoContent();
     }
 
     [HttpGet("{id:int}/comments")]
