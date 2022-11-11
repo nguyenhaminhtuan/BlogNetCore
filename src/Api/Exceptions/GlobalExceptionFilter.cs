@@ -15,18 +15,29 @@ public class GlobalExceptionFilter : IExceptionFilter
     
     public void OnException(ExceptionContext context)
     {
-        if (context.Exception is ConflictException)
+        var problem = _problemDetailsFactory.CreateProblemDetails(context.HttpContext);
+        switch (context.Exception)
         {
-            var problem = _problemDetailsFactory.CreateProblemDetails(
-                context.HttpContext,
-                StatusCodes.Status409Conflict, 
-                title: "Conflict",
-                detail: context.Exception.Message);
-            context.Result = new ObjectResult(problem)
-            {
-                StatusCode = StatusCodes.Status409Conflict
-            };
-            context.ExceptionHandled = true;
+            case ConflictException:
+                problem.Status = StatusCodes.Status409Conflict;
+                problem.Title = "Conflict";
+                problem.Detail = context.Exception.Message;
+                context.Result = new ObjectResult(problem)
+                {
+                    StatusCode = problem.Status
+                };
+                context.ExceptionHandled = true;
+                break;
+            case NotImplementedException:
+                problem.Status = StatusCodes.Status501NotImplemented;
+                problem.Title = "Not implemented";
+                problem.Detail = context.Exception.Message;
+                context.Result = new ObjectResult(problem)
+                {
+                    StatusCode = problem.Status
+                };
+                context.ExceptionHandled = true;
+                break;
         }
     }
 }
