@@ -29,11 +29,6 @@ public class VoteService : IVoteService
         await _db.SaveChangesAsync();
     }
 
-    public async Task<Vote?> GetVoteById(int voteId)
-    {
-        return await _db.Votes.FirstOrDefaultAsync(v => v.Id == voteId);
-    }
-
     public async Task<Vote?> GetArticleVoteByUser(int userId, Article article)
     {
         return await _db.Votes.FirstOrDefaultAsync(v => v.ArticleId == article.Id && v.OwnerId == userId);
@@ -44,24 +39,14 @@ public class VoteService : IVoteService
         return await _db.Votes.FirstOrDefaultAsync(v => v.CommentId == comment.Id && v.OwnerId == userId);
     }
 
-    public async Task UpvoteArticle(int articleId, int ownerId)
+    public async Task VoteArticle(int articleId, int ownerId, bool isPositive)
     {
-        await CreateVote(true, ownerId, articleId, null);
+        await CreateVote(isPositive, ownerId, articleId, null);
     }
 
-    public async Task DownvoteArticle(int articleId, int ownerId)
+    public async Task VoteComment(int commentId, int ownerId, bool isPositive)
     {
-        await CreateVote(false, ownerId, articleId, null);
-    }
-
-    public async Task UpvoteComment(int commentId, int ownerId)
-    {
-        await CreateVote(true, ownerId, null, commentId);
-    }
-
-    public async Task DownvoteComment(int commentId, int ownerId)
-    {
-        await CreateVote(false, ownerId, null, commentId);
+        await CreateVote(isPositive, ownerId, null, commentId);
     }
 
     public async Task DeleteVote(Vote vote)

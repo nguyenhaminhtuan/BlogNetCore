@@ -6,9 +6,7 @@ public interface IVoteService
 {
     public Task<Vote?> GetArticleVoteByUser(int userId, Article article);
     public Task<Vote?> GetCommentVoteByUser(int userId, Comment comment);
-    public Task UpvoteArticle(int articleId, int ownerId);
-    public Task DownvoteArticle(int articleId, int ownerId);
-    public Task UpvoteComment(int commentId, int ownerId);
-    public Task DownvoteComment(int commentId, int ownerId);
+    public Task VoteArticle(int articleId, int ownerId, bool isPositive);
+    public Task VoteComment(int commentId, int ownerId, bool isPositive);
     public Task DeleteVote(Vote vote);
 }

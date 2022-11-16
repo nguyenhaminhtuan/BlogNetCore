@@ -210,14 +210,9 @@ public class ArticlesController : ApiControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id:int}/vote")]
-    [SwaggerOperation(Summary = "Upvote article")]
-    [SwaggerResponse(StatusCodes.Status200OK, "Upvote article successfully")]
-    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
-    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to upvote article")]
-    public async Task<IActionResult> Upvote(int id)
+    private async Task<IActionResult> Vote(int articleId, bool isPositive)
     {
-        var article = await _articleService.GetArticleById(id);
+        var article = await _articleService.GetArticleById(articleId);
         if (article is null)
             return NotFound("Article not found");
         
@@ -226,27 +221,48 @@ public class ArticlesController : ApiControllerBase
         if (!authorizationResult.Succeeded)
             return Forbid("You do not have permission to vote this article");
 
-        await _voteService.UpvoteArticle(article.Id, User.GetUserId());
+        await _voteService.VoteArticle(article.Id, User.GetUserId(), isPositive);
         return Ok();
     }
 
-    [HttpDelete("{id:int}/vote")]
-    [SwaggerOperation(Summary = "Downvote article")]
-    [SwaggerResponse(StatusCodes.Status204NoContent, "Downvote article successfully")]
+    [HttpPost("{id:int}/vote/up")]
+    [SwaggerOperation(Summary = "Up vote article")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Up vote article successfully")]
     [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
-    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to upvote article")]
-    public async Task<IActionResult> Downvote(int id)
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to vote article")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
+    public async Task<IActionResult> UpVote(int id)
+    {
+        return await Vote(id, true);
+    }
+
+    [HttpPost("{id:int}/vote/down")]
+    [SwaggerOperation(Summary = "Down vote article")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Down vote article successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to vote article")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
+    public async Task<IActionResult> DownVote(int id)
+    {
+        return await Vote(id, false);
+    }
+
+    [HttpDelete("{id:int}/vote")]
+    [SwaggerOperation(Summary = "Remove article vote of current user")]
+    [SwaggerResponse(StatusCodes.Status204NoContent, "Remove vote successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
+    public async Task<IActionResult> UnVote(int id)
     {
         var article = await _articleService.GetArticleById(id);
         if (article is null)
             return NotFound("Article not found");
-        
-        var authorizationResult = await _authorizationService
-            .AuthorizeAsync(User, article, ArticleOperations.Vote);
-        if (!authorizationResult.Succeeded)
-            return Forbid("You do not have permission to vote this article");
 
-        await _voteService.DownvoteArticle(article.Id, User.GetUserId());
+        var vote = await _voteService.GetArticleVoteByUser(User.GetUserId(), article);
+        if (vote is null)
+            return NoContent();
+        
+        await _voteService.DeleteVote(vote);
         return NoContent();
     }
 

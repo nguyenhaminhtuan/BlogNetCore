@@ -107,9 +107,9 @@ public class CommentsController : ApiControllerBase
         return NoContent();
     }
 
-    private async Task<IActionResult> Vote(int id, bool upvote)
+    private async Task<IActionResult> Vote(int commentId, bool isPositive)
     {
-        var comment = await _commentService.GetCommentById(id);
+        var comment = await _commentService.GetCommentById(commentId);
         if (comment is null)
             return NotFound("Comment not found");
 
@@ -120,12 +120,8 @@ public class CommentsController : ApiControllerBase
         var userId = User.GetUserId();
         if (await _voteService.GetCommentVoteByUser(userId, comment) is not null)
             return Conflict("You already voted this comment");
-
-        if (upvote)
-            await _voteService.UpvoteComment(comment.Id, userId);
-        else 
-            await _voteService.DownvoteComment(comment.Id, userId);
-
+        
+        await _voteService.VoteComment(comment.Id, userId, isPositive);
         return Ok();
     }
 
