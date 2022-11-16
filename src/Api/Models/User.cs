@@ -12,6 +12,9 @@ public class User : Entity
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime LastChanged { get; set; } = DateTime.UtcNow;
     public ICollection<Article> Articles { get; set; } = new List<Article>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<Comment> Replies { get; set; } = new List<Comment>();
+    public ICollection<Vote> Votes { get; set; } = new List<Vote>();
 }
 
 public enum UserStatus : byte

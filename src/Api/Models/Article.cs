@@ -1,4 +1,6 @@
-﻿namespace Api.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace Api.Models;
 
 public class Article : Entity
 {
@@ -14,6 +16,12 @@ public class Article : Entity
     public ICollection<Tag> Tags { get; set; } = new List<Tag>();
     public ICollection<Comment> Comments { get; set; } = new List<Comment>();
     public ICollection<Vote> Votes { get; set; } = new List<Vote>();
+
+    [NotMapped]
+    public int UpVoteCount { get; set; }
+
+    [NotMapped]
+    public int DownVoteCount { get; set; }
 }
 
 public enum ArticleStatus : byte

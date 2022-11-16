@@ -11,4 +11,5 @@ public static class ArticleOperations
     public static readonly OperationAuthorizationRequirement Publish = new() { Name = nameof(Publish) };
     public static readonly OperationAuthorizationRequirement Archive = new() { Name = nameof(Archive) };
     public static readonly OperationAuthorizationRequirement Vote = new() { Name = nameof(Vote) };
+    public static readonly OperationAuthorizationRequirement Comment = new() { Name = nameof(Comment) };
 }

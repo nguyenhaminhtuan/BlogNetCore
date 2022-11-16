@@ -1,41 +1,99 @@
+using Api.Data;
 using Api.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Api.Services;
 
 public class CommentService : ICommentService
 {
-    public Task CreateArticleComment(string body, int ownerId, int articleId)
+    private readonly ApplicationDbContext _db;
+
+    public CommentService(ApplicationDbContext db)
     {
-        throw new NotImplementedException();
+        _db = db;
     }
 
-    public Task ReplyComment(string body, int commentId, int ownerId, int replyToId)
+    public async Task<Comment?> GetCommentById(int id)
     {
-        throw new NotImplementedException();
+        return await _db.Comments.FirstOrDefaultAsync(c => c.Id == id);
     }
 
-    public Task DeleteComment(int commentId)
+    public async Task CreateArticleComment(string body, int ownerId, Article article)
     {
-        throw new NotImplementedException();
+        var comment = new Comment()
+        {
+            Body = body,
+            OwnerId = ownerId,
+            ArticleId = article.Id
+        };
+        await _db.Comments.AddAsync(comment);
+        await _db.SaveChangesAsync();
     }
 
-    public Task UpvoteComment(int commentId, int voterId)
+    public async Task ReplyComment(string body, int ownerId, Comment comment, int? replyToId)
     {
-        throw new NotImplementedException();
+        var reply = new Comment()
+        {
+            Body = body,
+            OwnerId = ownerId,
+            ArticleId = comment.ArticleId,
+            ReplyFromId = comment.Id,
+            ReplyToId = replyToId
+        };
+        await _db.Comments.AddAsync(reply);
+        await _db.SaveChangesAsync();
     }
 
-    public Task DownvoteComment(int commentId, int voterId)
+    public async Task DeleteComment(Comment comment)
     {
-        throw new NotImplementedException();
+        comment.IsDeleted = true;
+        await _db.SaveChangesAsync();
     }
 
-    public Task<PaginatedList<Comment>> GetCommentsByArticlePagination(int pageIndex, int pageSize, int articleId)
+    public async Task<PaginatedList<Comment>> GetCommentsByArticlePagination(int pageIndex, int pageSize, int articleId)
     {
-        throw new NotImplementedException();
+        var queryable = _db.Comments
+            .AsNoTracking()
+            .Include(c => c.Owner)
+            .Include(c => c.Replies.Take(5).OrderBy(c => c.CommentedAt))
+            .Include(c => c.Replies).ThenInclude(r => r.Owner)
+            .Include(c => c.Replies).ThenInclude(r => r.ReplyTo)
+            .Where(c => c.ArticleId == articleId)
+            .Where(c => c.ReplyFromId == null)
+            .OrderBy(c => c.CommentedAt)
+            .Select(c => new Comment()
+            {
+                Id = c.Id,
+                Body = c.Body,
+                IsDeleted = c.IsDeleted,
+                CommentedAt = c.CommentedAt,
+                Owner = c.Owner,
+                Replies = c.Replies,
+                UpVoteCount = c.Votes.Count(v => v.IsPositive),
+                DownVoteCount = c.Votes.Count(v => !v.IsPositive)
+            });
+        return await PaginatedList<Comment>.CreateAsync(queryable, pageIndex, pageSize);
     }
 
-    public Task<PaginatedList<Comment>> GetRepliesByCommentPagination(int pageIndex, int pageSize, int commentId)
+    public async Task<PaginatedList<Comment>> GetRepliesByCommentPagination(int pageIndex, int pageSize, int commentId)
     {
-        throw new NotImplementedException();
+        var queryable = _db.Comments
+            .AsNoTracking()
+            .Include(c => c.Owner)
+            .Include(c => c.ReplyTo)
+            .Where(c => c.ReplyFromId == commentId)
+            .OrderBy(c => c.CommentedAt)
+            .Select(c => new Comment()
+            {
+                Id = c.Id,
+                Body = c.Body,
+                IsDeleted = c.IsDeleted,
+                CommentedAt = c.CommentedAt,
+                Owner = c.Owner,
+                ReplyTo = c.ReplyTo,
+                UpVoteCount = c.Votes.Count(v => v.IsPositive),
+                DownVoteCount = c.Votes.Count(v => !v.IsPositive),
+            });
+        return await PaginatedList<Comment>.CreateAsync(queryable, pageIndex, pageSize);
     }
 }

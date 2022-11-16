@@ -29,6 +29,21 @@ public class VoteService : IVoteService
         await _db.SaveChangesAsync();
     }
 
+    public async Task<Vote?> GetVoteById(int voteId)
+    {
+        return await _db.Votes.FirstOrDefaultAsync(v => v.Id == voteId);
+    }
+
+    public async Task<Vote?> GetArticleVoteByUser(int userId, Article article)
+    {
+        return await _db.Votes.FirstOrDefaultAsync(v => v.ArticleId == article.Id && v.OwnerId == userId);
+    }
+
+    public async Task<Vote?> GetCommentVoteByUser(int userId, Comment comment)
+    {
+        return await _db.Votes.FirstOrDefaultAsync(v => v.CommentId == comment.Id && v.OwnerId == userId);
+    }
+
     public async Task UpvoteArticle(int articleId, int ownerId)
     {
         await CreateVote(true, ownerId, articleId, null);
@@ -49,29 +64,9 @@ public class VoteService : IVoteService
         await CreateVote(false, ownerId, null, commentId);
     }
 
-    public async Task<IEnumerable<Vote>> GetVotesByArticle(int articleId)
+    public async Task DeleteVote(Vote vote)
     {
-        return await _db.Votes
-            .Include(v => v.Article)
-            .Where(v => v.ArticleId != null)
-            .ToListAsync();
-    }
-
-    public async Task<IEnumerable<Vote>> GetVotesByComment(int commentId)
-    {
-        return await _db.Votes
-            .Include(v => v.Comment)
-            .Where(v => v.Comment != null)
-            .ToListAsync();
-    }
-
-    public int CountArticleUpvote(IEnumerable<Vote> votes)
-    {
-        return votes.Count(v => v.IsPositive);
-    }
-
-    public int CountArticleDownvote(IEnumerable<Vote> votes)
-    {
-        return votes.Count(v => !v.IsPositive);
+        _db.Votes.Remove(vote);
+        await _db.SaveChangesAsync();
     }
 }

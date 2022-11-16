@@ -21,19 +21,22 @@ public class ArticlesController : ApiControllerBase
     private readonly IArticleService _articleService;
     private readonly ITagService _tagService;
     private readonly IVoteService _voteService;
+    private readonly ICommentService _commentService;
 
     public ArticlesController(
         IMapper mapper,
         IAuthorizationService authorizationService,
         IArticleService articleService,
         ITagService tagService,
-        IVoteService voteService)
+        IVoteService voteService,
+        ICommentService commentService)
     {
         _mapper = mapper;
         _authorizationService = authorizationService;
         _articleService = articleService;
         _tagService = tagService;
         _voteService = voteService;
+        _commentService = commentService;
     }
 
     [HttpPost]
@@ -209,6 +212,9 @@ public class ArticlesController : ApiControllerBase
 
     [HttpPost("{id:int}/vote")]
     [SwaggerOperation(Summary = "Upvote article")]
+    [SwaggerResponse(StatusCodes.Status200OK, "Upvote article successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to upvote article")]
     public async Task<IActionResult> Upvote(int id)
     {
         var article = await _articleService.GetArticleById(id);
@@ -226,6 +232,9 @@ public class ArticlesController : ApiControllerBase
 
     [HttpDelete("{id:int}/vote")]
     [SwaggerOperation(Summary = "Downvote article")]
+    [SwaggerResponse(StatusCodes.Status204NoContent, "Downvote article successfully")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to upvote article")]
     public async Task<IActionResult> Downvote(int id)
     {
         var article = await _articleService.GetArticleById(id);
@@ -242,16 +251,57 @@ public class ArticlesController : ApiControllerBase
     }
 
     [HttpGet("{id:int}/comments")]
+    [AllowAnonymous]
     [SwaggerOperation(Summary = "Get article's comments")]
-    public Task<IActionResult> GetComments(int id)
+    [SwaggerResponse(StatusCodes.Status200OK, "Get comments successfully", typeof(PaginatedDto<CommentDto>))]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid paginate input data")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
+    public async Task<IActionResult> GetComments(
+        int id,
+        [FromQuery] PaginateQuery paginate,
+        [FromServices] IValidator<PaginateQuery> validator)
     {
-        throw new NotImplementedException();
+        var validationResult = await validator.ValidateAsync(paginate);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
+        var article = await _articleService.GetArticleById(id);
+        if (article is null)
+            return NotFound("Article not found");
+
+        var paginatedComments =
+            await _commentService.GetCommentsByArticlePagination(paginate.PageIndex, paginate.PageSize, article.Id);
+        return Ok(_mapper.Map<PaginatedDto<CommentDto>>(paginatedComments));
     }
 
     [HttpPost("{id:int}/comments")]
     [SwaggerOperation(Summary = "Create article comment")]
-    public Task<IActionResult> CreateComment(int id)
+    [SwaggerResponse(StatusCodes.Status200OK, "New article comment created")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid input comment data")]
+    [SwaggerResponse(StatusCodes.Status401Unauthorized, "Authentication required")]
+    [SwaggerResponse(StatusCodes.Status403Forbidden, "Don't have permission to comment article")]
+    [SwaggerResponse(StatusCodes.Status404NotFound, "Can't find any article with given id")]
+    public async Task<IActionResult> CreateComment(
+        int id,
+        [FromBody] CreateCommentDto dto,
+        [FromServices] IValidator<CreateCommentDto> validator)
     {
-        throw new NotImplementedException();
+        var validationResult = await validator.ValidateAsync(dto);
+        validationResult.AddToModelState(ModelState);
+        if (!validationResult.IsValid)
+            return BadRequest(ModelState);
+        
+        var article = await _articleService.GetArticleById(id);
+        if (article is null)
+            return NotFound("Article not found");
+        
+        var authorizationResult = await _authorizationService
+            .AuthorizeAsync(User, article, ArticleOperations.Comment);
+        if (!authorizationResult.Succeeded)
+            return Forbid("You do not have permission to comment this article");
+        
+        await _commentService.CreateArticleComment(dto.Body, User.GetUserId(), article);
+        return Ok();
     }
 }

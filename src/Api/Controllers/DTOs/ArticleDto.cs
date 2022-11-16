@@ -10,5 +10,5 @@ public class ArticleDto
     public DateTime LastModifiedAt { get; set; }
     public DateTime PublishedAt { get; set; }
     public ICollection<TagDto> Tags { get; set; }
-    public AuthorDto Author { get; set; }
+    public UserDto Author { get; set; }
 }

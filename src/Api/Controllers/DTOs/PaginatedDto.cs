@@ -2,7 +2,7 @@
 
 public class PaginatedDto<T>
 {
-    public int Count { get; set; }
+    public int TotalCount { get; set; }
     public int PageIndex { get; set; }
     public int TotalPages { get; set; }
     public bool HasPreviousPage { get; set; }

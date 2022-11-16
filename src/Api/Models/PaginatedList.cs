@@ -4,6 +4,7 @@ namespace Api.Models;
 
 public class PaginatedList<T> : List<T>
 {
+    public int TotalCount { get; }
     public int PageIndex { get; }
     public int TotalPages { get; }
     public bool HasPreviousPage => PageIndex > 1;
@@ -14,6 +15,7 @@ public class PaginatedList<T> : List<T>
     {
         PageIndex = pageIndex;
         TotalPages = (int)Math.Ceiling(count / (double)pageSize);
+        TotalCount = count;
         AddRange(items);
     }
 

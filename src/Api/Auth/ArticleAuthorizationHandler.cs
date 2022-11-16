@@ -35,6 +35,9 @@ public class ArticleAuthorizationHandler :
         if (requirement.Name == ArticleOperations.Vote.Name && CanVote(context.User, resource))
             context.Succeed(requirement);
         
+        if (requirement.Name == ArticleOperations.Comment.Name && CanComment(context.User, resource))
+            context.Succeed(requirement);
+        
         return Task.CompletedTask;
     }
     
@@ -96,6 +99,11 @@ public class ArticleAuthorizationHandler :
     }
     
     private static bool CanVote(ClaimsPrincipal user, Article article)
+    {
+        return IsAuthenticated(user) && article.Status == ArticleStatus.Published;
+    }
+    
+    private static bool CanComment(ClaimsPrincipal user, Article article)
     {
         return IsAuthenticated(user) && article.Status == ArticleStatus.Published;
     }

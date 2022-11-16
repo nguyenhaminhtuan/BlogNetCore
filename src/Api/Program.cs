@@ -73,14 +73,16 @@ try
     builder.Services.AddSingleton<IPasswordHasher<User>, PasswordHasher<User>>();
     builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, CustomAuthorizationMiddlewareResultHandler>();
     builder.Services.AddSingleton<IAuthorizationHandler, ArticleAuthorizationHandler>();
-    builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
+    builder.Services.AddSingleton<IAuthorizationHandler, CommentAuthorizationHandler>();
 
+    builder.Services.AddScoped<CustomCookieAuthenticationEvents>();
     builder.Services.AddScoped<IUserService, UserService>();
     builder.Services.AddScoped<ITagService, TagService>();
     builder.Services.AddScoped<IArticleService, ArticleService>();
     builder.Services.AddScoped<IEmailService, FakeEmailService>();
     builder.Services.AddScoped<ICommentService, CommentService>();
     builder.Services.AddScoped<IVoteService, VoteService>();
+    builder.Services.AddScoped<ICommentService, CommentService>();
 
     var app = builder.Build();
     

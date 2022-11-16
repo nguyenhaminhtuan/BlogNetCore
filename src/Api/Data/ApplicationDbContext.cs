@@ -9,6 +9,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Tag> Tags { get; set; }
     public DbSet<Article> Articles { get; set; }
     public DbSet<Vote> Votes { get; set; }
+    public DbSet<Comment> Comments { get; set; }
 
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) 
         : base(options)
@@ -17,6 +18,18 @@ public class ApplicationDbContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Vote>()
+            .HasOne(v => v.Owner)
+            .WithMany(u => u.Votes)
+            .HasForeignKey(v => v.OwnerId);
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.Owner)
+            .WithMany(u => u.Comments)
+            .HasForeignKey(v => v.OwnerId);
+        modelBuilder.Entity<Comment>()
+            .HasOne(c => c.ReplyTo)
+            .WithMany(u => u.Replies)
+            .HasForeignKey(v => v.ReplyToId);
         modelBuilder.Entity<Article>()
             .HasMany(a => a.Tags)
             .WithMany(t => t.Articles)
