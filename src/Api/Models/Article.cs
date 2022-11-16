@@ -18,10 +18,13 @@ public class Article : Entity
     public ICollection<Vote> Votes { get; set; } = new List<Vote>();
 
     [NotMapped]
-    public int UpVoteCount { get; set; }
+    public int TotalUpVotes { get; set; }
 
     [NotMapped]
-    public int DownVoteCount { get; set; }
+    public int TotalDownVotes { get; set; }
+    
+    [NotMapped]
+    public int TotalComments { get; set; }
 }
 
 public enum ArticleStatus : byte

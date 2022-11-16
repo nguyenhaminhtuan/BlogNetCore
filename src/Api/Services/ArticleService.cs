@@ -33,8 +33,27 @@ public class ArticleService : IArticleService
             .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Tags)
+            .Include(a => a.Votes)
+            .Include(a => a.Comments)
             .Where(a => a.Status == ArticleStatus.Published)
-            .OrderByDescending(a => a.PublishedAt);
+            .OrderByDescending(a => a.PublishedAt)
+            .Select(a => new Article()
+            {
+                Id = a.Id,
+                Slug = a.Slug,
+                Title = a.Title,
+                Content = a.Content,
+                CreatedAt = a.CreatedAt,
+                PublishedAt = a.PublishedAt,
+                LastModifiedAt = a.LastModifiedAt,
+                Status = a.Status,
+                AuthorId = a.AuthorId,
+                Author = a.Author,
+                Tags = a.Tags,
+                TotalUpVotes = a.Votes.Count(v => v.IsPositive),
+                TotalDownVotes = a.Votes.Count(v => !v.IsPositive),
+                TotalComments = a.Comments.Count
+            });
         return await PaginatedList<Article>.CreateAsync(source, pageIndex, pageSize);
     }
 
@@ -137,9 +156,28 @@ public class ArticleService : IArticleService
             .AsNoTracking()
             .Include(a => a.Author)
             .Include(a => a.Tags)
+            .Include(a => a.Votes)
+            .Include(a => a.Comments)
             .Where(a => a.AuthorId == authorId)
             .Where(a => a.Status == status)
-            .OrderByDescending(a => status == ArticleStatus.Draft ? a.CreatedAt : a.PublishedAt);
+            .OrderByDescending(a => status == ArticleStatus.Draft ? a.CreatedAt : a.PublishedAt)
+            .Select(a => new Article()
+            {
+                Id = a.Id,
+                Slug = a.Slug,
+                Title = a.Title,
+                Content = a.Content,
+                CreatedAt = a.CreatedAt,
+                PublishedAt = a.PublishedAt,
+                LastModifiedAt = a.LastModifiedAt,
+                Status = a.Status,
+                AuthorId = a.AuthorId,
+                Author = a.Author,
+                Tags = a.Tags,
+                TotalUpVotes = a.Votes.Count(v => v.IsPositive),
+                TotalDownVotes = a.Votes.Count(v => !v.IsPositive),
+                TotalComments = a.Comments.Count
+            });
         return PaginatedList<Article>.CreateAsync(queryable, pageIndex, pageSize);
     }
 
@@ -147,7 +185,28 @@ public class ArticleService : IArticleService
     {
         var queryable = _db.Articles
             .AsNoTracking()
-            .Include(a => a.Tags.Where(t => t.Id == tagId));
+            .Include(a => a.Tags.Where(t => t.Id == tagId))
+            .Include(a => a.Author)
+            .Include(a => a.Tags)
+            .Include(a => a.Votes)
+            .Include(a => a.Comments)
+            .OrderByDescending(a => a.PublishedAt).Select(a => new Article()
+            {
+                Id = a.Id,
+                Slug = a.Slug,
+                Title = a.Title,
+                Content = a.Content,
+                CreatedAt = a.CreatedAt,
+                PublishedAt = a.PublishedAt,
+                LastModifiedAt = a.LastModifiedAt,
+                Status = a.Status,
+                AuthorId = a.AuthorId,
+                Author = a.Author,
+                Tags = a.Tags,
+                TotalUpVotes = a.Votes.Count(v => v.IsPositive),
+                TotalDownVotes = a.Votes.Count(v => !v.IsPositive),
+                TotalComments = a.Comments.Count
+            });
         return PaginatedList<Article>.CreateAsync(queryable, pageIndex, pageSize);
     }
 }

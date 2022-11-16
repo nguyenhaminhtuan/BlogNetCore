@@ -11,4 +11,7 @@ public class ArticleDto
     public DateTime PublishedAt { get; set; }
     public ICollection<TagDto> Tags { get; set; }
     public UserDto Author { get; set; }
+    public int TotalUpVotes { get; set; }
+    public int TotalDownVotes { get; set; }
+    public int TotalComments { get; set; }
 }
