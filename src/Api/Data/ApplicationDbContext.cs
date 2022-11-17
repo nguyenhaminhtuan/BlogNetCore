@@ -50,6 +50,10 @@ public class ApplicationDbContext : DbContext
             .HasQueryFilter(u => u.Status != UserStatus.Disabled);
         modelBuilder.Entity<Article>()
             .HasQueryFilter(a => a.Status != ArticleStatus.Deleted);
+        modelBuilder.Entity<Comment>()
+            .HasQueryFilter(c => c.Article.Status != ArticleStatus.Deleted);
+        modelBuilder.Entity<Vote>()
+            .HasQueryFilter(v => v.Owner.Status != UserStatus.Disabled);
 
         base.OnModelCreating(modelBuilder);
     }
