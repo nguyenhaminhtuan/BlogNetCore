@@ -11,7 +11,7 @@ services:
     volumes:
       - blognetcore_db:/var/opt/mssql/data
   migrator:
-    image: flyway/flyway:9.6.0-alpine
+    image: flyway/flyway:9.8.1-alpine
     container_name: "migrator"
     command: migrate
     volumes:
